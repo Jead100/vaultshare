@@ -1,0 +1,23 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.sqlite3
+
+# Pipenv
+Pipfile.lock
+.venv/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+*.log
+
+# VSCode or JetBrains IDEs
+.vscode/
+.idea/
+
+# Secrets
+.env
+
+# Nodejs
+node_modules/
