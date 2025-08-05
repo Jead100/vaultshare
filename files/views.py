@@ -1,6 +1,8 @@
 from datetime import timedelta
 
+from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from django.shortcuts import render, redirect, get_object_or_404
 
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
@@ -31,3 +33,15 @@ class UploadedFileViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED
         )
 
+@login_required
+def generate_link(request, file_id):
+    file = get_object_or_404(UploadedFile, id=file_id, user=request.user)
+    expires_at = timezone.now() + timedelta(minutes=5)  # default expiry
+    link = SharedLink.objects.create(file=file, expires_at=expires_at)
+    return render(request, "files/link_created.html", {"link": link})
+
+def public_download(request, token):
+    shared_link = get_object_or_404(SharedLink, token=token)
+    if shared_link.is_expired():
+        return render(request, "files/link_expired.html")
+    return render(request, "files/public_download.html", {"file": shared_link.file})

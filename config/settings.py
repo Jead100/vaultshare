@@ -123,10 +123,10 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
+# Static files
+# ------------
 
-STATIC_URL = 'static/'
+STATIC_URL = "/static/"
 
 
 MEDIA_URL = "/media/"
@@ -140,6 +140,8 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Django Tailwind
+# ---------------
+
 TAILWIND_APP_NAME = 'theme'
 
 if DEBUG:
@@ -153,6 +155,8 @@ NPM_BIN_PATH = "C:/Program Files/nodejs/npm.cmd"
 
 
 # Part 2 - Auth
+# -------------
+
 SITE_ID = 1
 
 AUTH_USER_MODEL = "users.User"

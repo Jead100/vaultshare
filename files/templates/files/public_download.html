@@ -1,0 +1,5 @@
+{% extends "core/base.html" %}
+{% block content %}
+<h1 class="text-xl font-bold mb-4">{{ file.filename }}</h1>
+<a href="{{ file.file.url }}" download class="bg-green-500 text-white px-4 py-2 rounded">Download</a>
+{% endblock %}

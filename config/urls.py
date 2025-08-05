@@ -8,7 +8,9 @@ urlpatterns = [
     path("auth/", include("dj_rest_auth.urls")),
     path("auth/registration/", include("dj_rest_auth.registration.urls")),
     ###
-    path("api/", include("files.urls")),
+    path("", include("core.urls")),
+    path("", include("files.urls.ui")),
+    path("api/", include("files.urls.api")),
 ]
 
 if settings.DEBUG:
