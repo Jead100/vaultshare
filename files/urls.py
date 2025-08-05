@@ -1,7 +1,8 @@
-from django.urls import path
+from rest_framework.routers import DefaultRouter
 
-from files.views import tailwind_home
+from .views import UploadedFileViewSet
 
-urlpatterns = [
-    path("", view=tailwind_home, name="tailwind-home"),
-]
+router = DefaultRouter()
+router.register("files", UploadedFileViewSet, basename="files")
+
+urlpatterns = router.urls

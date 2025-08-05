@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1 class="text-xl font-bold mb-4">Upload a File</h1>
+
+  <form method="post" enctype="multipart/form-data" class="space-y-4">
+    {% csrf_token %}
+    <input type="file" name="file" class="block" required>
+    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Upload</button>
+  </form>
+
+  <h2 class="mt-8 text-lg font-semibold">Your Files</h2>
+  <ul class="list-disc pl-5">
+    {% for f in files %}
+      <li>{{ f.filename }} ({{ f.size|filesizeformat }})</li>
+    {% endfor %}
+  </ul>
+{% endblock %}
