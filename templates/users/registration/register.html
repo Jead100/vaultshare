@@ -8,7 +8,7 @@
         <form method="post" class="space-y-5">
             {% csrf_token %}
             {% for field in form %}
-                {% include "partials/_form_field.html" with field=field %}
+                {% include "_partials/_form_field.html" with field=field %}
             {% endfor %}
             <button type="submit"
                 class="w-full bg-green-500 text-white py-3 rounded-xl font-semibold
