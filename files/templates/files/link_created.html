@@ -1,6 +1,0 @@
-{% extends "core/base.html" %}
-{% block content %}
-<h1 class="text-xl font-bold mb-4">Link Created</h1>
-<p>Share this link (valid for 5 minutes):</p>
-<pre class="bg-gray-100 p-2 rounded mt-2">{{ request.build_absolute_uri }}/share/{{ link.token }}/</pre>
-{% endblock %}

@@ -1,6 +1,7 @@
-from django import forms
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 
-from .models import UploadedFile
+from .models import User
+
 
 class BaseStyledForm:
     """Mixin to apply Tailwind styles to all visible fields."""
@@ -16,10 +17,12 @@ class BaseStyledForm:
                 )
             })
 
-class FileUploadForm(BaseStyledForm, forms.ModelForm):
+
+class CustomUserCreationForm(BaseStyledForm, UserCreationForm):
     class Meta:
-        model = UploadedFile
-        fields = ["file"]
-        widgets = {
-            "file": forms.ClearableFileInput(attrs={"class": "hidden"})
-        }
+        model = User
+        fields = ["email", "password1", "password2"]
+
+
+class CustomAuthenticationForm(BaseStyledForm, AuthenticationForm):
+    pass

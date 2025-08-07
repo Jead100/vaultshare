@@ -1,0 +1,25 @@
+{% if files %}
+    <ul class="divide-y divide-gray-200">
+        {% for f in files %}
+            <li class="py-3 flex justify-between items-center">
+                <div>
+                    <span class="font-medium">{{ f.filename }}</span>
+                    <span class="text-sm text-gray-500">({{ f.size|filesizeformat }})</span>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="{% url 'files_html:generate_link' f.id %}"
+                       class="text-blue-500 hover:underline font-medium">
+                        Share
+                    </a>
+                    <button type="button"
+                        class="text-red-500 hover:underline font-medium delete-file"
+                        data-file-id="{{ f.id }}">
+                        Delete
+                    </button>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p class="text-gray-500">No files uploaded yet.</p>
+{% endif %}

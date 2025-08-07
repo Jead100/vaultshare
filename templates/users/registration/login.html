@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="flex justify-center items-center min-h-[70vh]">
+    <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+        <h1 class="text-3xl font-bold mb-6 text-gray-800">Login</h1>
+        <form method="post" class="space-y-5">
+            {% csrf_token %}
+            {% for field in form %}
+                {% include "partials/_form_field.html" with field=field %}
+            {% endfor %}
+            <button type="submit"
+                class="w-full bg-blue-500 text-white py-3 rounded-xl font-semibold
+                       hover:bg-blue-600 hover:shadow-md transition duration-200">
+                Login
+            </button>
+        </form>
+        <p class="mt-6 text-sm text-gray-600 text-center">
+            Don't have an account?
+            <a href="{% url 'users_html:register' %}" class="text-blue-500 hover:underline font-medium">
+                Sign up
+            </a>
+        </p>
+    </div>
+</div>
+{% endblock %}

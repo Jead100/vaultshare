@@ -1,0 +1,17 @@
+<nav class="bg-white shadow-sm mb-8">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+        <a href="{% url 'home' %}" class="font-bold text-xl text-blue-600">VaultShare</a>
+        <div class="space-x-4">
+            {% if user.is_authenticated %}
+                <span class="text-gray-700">{{ user.email }}</span>
+                <form method="post" action="{% url 'users_html:logout' %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="text-red-500 hover:underline">Logout</button>
+                </form>
+            {% else %}
+                <a href="{% url 'users_html:login' %}" class="text-blue-500 hover:underline">Login</a>
+                <a href="{% url 'users_html:register' %}" class="text-blue-500 hover:underline">Sign Up</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
