@@ -1,6 +1,6 @@
 from rest_framework.routers import DefaultRouter
 
-from .views import UploadedFileViewSet
+from ..views.api import UploadedFileViewSet
 
 app_name = "files_api"
 
