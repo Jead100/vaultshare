@@ -1,0 +1,44 @@
+<div id="confirm-modal"
+     class="fixed inset-0 z-50 hidden"
+     aria-hidden="true">
+    <div class="fixed inset-0 bg-black/50 transition-opacity"></div>
+
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+        <div
+            class="w-full max-w-md rounded-2xl bg-white shadow-xl border border-gray-100
+                    transform transition-all"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirm-modal-title"
+            aria-describedby="confirm-modal-desc"
+            tabindex="-1"
+        >
+            <div class="px-6 py-5">
+                <h3 id="confirm-modal-title" class="text-lg font-semibold text-gray-900">
+                    Confirm action
+                </h3>
+                <p id="confirm-modal-desc" class="mt-2 text-sm text-gray-600">
+                    Are you sure?
+                </p>
+            </div>
+
+            <div class="px-6 py-4 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                <button
+                    type="button"
+                    id="confirm-cancel"
+                    class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700
+                            hover:bg-gray-100 transition"
+                >
+                    Cancel
+                </button>
+                <button
+                    type="button"
+                    id="confirm-accept"
+                    class="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
+                >
+                    Yes, delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

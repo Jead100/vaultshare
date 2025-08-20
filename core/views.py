@@ -1,34 +1,101 @@
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.shortcuts import render
-from django.template.loader import render_to_string
+from typing import Any
 
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.paginator import Page, Paginator
+from django.http import JsonResponse
+from django.shortcuts import render, redirect
+from django.template.loader import render_to_string
+from django.views.generic import TemplateView, View
+
+from .utils.request import is_ajax
 from files.models import UploadedFile
 from files.forms import FileUploadForm
 
 
-def home(request):
-    return render(request, "core/home.html")
+class HomeView(TemplateView):
+    """
+    Public landing page.
+    """
+
+    template_name = "core/home.html"
 
 
-@login_required
-def dashboard(request):
-    if request.method == "POST":
-        form = FileUploadForm(request.POST, request.FILES)
+class DashboardView(LoginRequiredMixin, View):
+    """
+    File upload dashboard for logged-in users.
+    Supports AJAX and standard form submissions. 
+    """
+
+    template_name = "core/dashboard.html"
+    list_partial_template = "_partials/_files_list.html"
+    PAGE_SIZE = 10
+
+    # --- helpers ---
+
+    def _page(self, request, page_number: Any) -> Page:
+        """
+        Return a paginated page of the current user's uploaded files.
+        Falls back gracefully on invalid or out-of-range page numbers.
+        """
+        qs = (UploadedFile.objects
+              .filter(user=request.user)
+              .order_by("-uploaded_at", "-id"))
+        paginator = Paginator(qs, self.PAGE_SIZE)
+        return paginator.get_page(page_number)
+    
+    def _context(self, request, page: Page, form: FileUploadForm | None = None) -> dict:
+        """
+        Build the template context for rendering.
+        """
+        return {
+            "form": form or FileUploadForm(user=request.user),
+            "files": page.object_list,
+            "page_obj": page,
+            "paginator": page.paginator,
+        }
+
+    def _payload(self, page: Page, html: str) -> dict:
+        """
+        JSON envelope for successful list renders (used by AJAX).
+        """
+        return {
+            "success": True,
+            "html": html,
+            "page": page.number,
+            "num_pages": page.paginator.num_pages,
+            "count": page.paginator.count,
+        }
+
+    # --- HTTP methods ---
+    
+    def get(self, request):
+        page = self._page(request, request.GET.get("page", 1))
+        ctx = self._context(request, page)
+
+        if is_ajax(request):
+            html = render_to_string(self.list_partial_template, ctx, request)
+            return JsonResponse(self._payload(page, html))
+        
+        return render(request, self.template_name, ctx)
+    
+    def post(self, request):
+        form = FileUploadForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
-            uploaded_file = form.save(commit=False)
-            uploaded_file.user = request.user
-            uploaded_file.filename = uploaded_file.file.name
-            uploaded_file.size = uploaded_file.file.size
-            uploaded_file.save()
+            form.save()
 
-        files = UploadedFile.objects.filter(user=request.user)
+            if is_ajax(request):
+                # Rebuild the first page (newest first) after upload
+                first_page = self._page(request, 1)
+                ctx = self._context(request, first_page)
+                html = render_to_string(self.list_partial_template, ctx, request)
+                return JsonResponse(self._payload(first_page, html), status=201)
+            
+            return redirect("core:dashboard")
 
-        # Always return JSON for POST
-        html = render_to_string("partials/_files_list.html", {"files": files})
-        return JsonResponse({"success": True, "html": html, "count": files.count()})
-
-    else:
-        form = FileUploadForm()
-        files = UploadedFile.objects.filter(user=request.user)
-        return render(request, "core/dashboard.html", {"form": form, "files": files})
+        # Invalid form
+        if is_ajax(request):
+            return JsonResponse({"success": False,"errors": form.errors}, status=400)
+        
+        page = self._page(request, request.GET.get("page", 1))
+        ctx = self._context(request, page, form)
+        return render(request, self.template_name, ctx, status=400)

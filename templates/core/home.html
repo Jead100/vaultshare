@@ -19,17 +19,17 @@
             </p>
             {% if not user.is_authenticated %}
                 <div class="flex justify-center space-x-4">
-                    <a href="{% url 'users_html:login' %}" 
+                    <a href="{% url 'users:login' %}" 
                        class="bg-blue-500 text-white px-8 py-3 rounded-lg font-semibold shadow hover:bg-blue-600 transform hover:-translate-y-0.5 transition">
                        Login
                     </a>
-                    <a href="{% url 'users_html:register' %}" 
+                    <a href="{% url 'users:register' %}" 
                        class="bg-green-500 text-white px-8 py-3 rounded-lg font-semibold shadow hover:bg-green-600 transform hover:-translate-y-0.5 transition">
                        Sign Up
                     </a>
                 </div>
             {% else %}
-                <a href="{% url 'core_html:dashboard' %}" 
+                <a href="{% url 'core:dashboard' %}" 
                    class="bg-blue-500 text-white px-8 py-3 rounded-lg font-semibold shadow hover:bg-blue-600 transform hover:-translate-y-0.5 transition">
                    Go to Dashboard
                 </a>

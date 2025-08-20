@@ -1,5 +1,3 @@
-import os
-
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -128,6 +126,7 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 
+STATICFILES_DIRS = [ BASE_DIR / "static" ]
 
 MEDIA_URL = "/media/"
 
@@ -167,6 +166,6 @@ ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 ACCOUNT_EMAIL_VERIFICATION = "none" if DEBUG else "mandatory"
 
 
-LOGIN_URL = 'users_html:login'
+LOGIN_URL = 'users:login'
 
-LOGIN_REDIRECT_URL = 'core_html:dashboard'
+LOGIN_REDIRECT_URL = 'core:dashboard'

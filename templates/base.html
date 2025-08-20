@@ -13,5 +13,11 @@
     <main class="max-w-6xl mx-auto px-4 h-full">
         {% block content %}{% endblock %}
     </main>
+
+    <!-- Site-wide modals or page-specific modal includes -->
+    {% block modals %}{% endblock %}
+
+    <!-- Page-specific scripts load here, after DOM is parsed -->
+    {% block scripts %}{% endblock %}
 </body>
 </html>

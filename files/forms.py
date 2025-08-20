@@ -1,25 +1,24 @@
+import os
+
 from django import forms
 
 from .models import UploadedFile
 
-class BaseStyledForm:
-    """Mixin to apply Tailwind styles to all visible fields."""
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for visible in self.visible_fields():
-            visible.field.widget.attrs.update({
-                "class": (
-                    "w-full px-4 py-3 border border-gray-300 rounded-xl "
-                    "focus:outline-none focus:ring-2 focus:ring-blue-400 "
-                    "focus:border-transparent bg-gray-50 text-gray-900 "
-                    "transition duration-200"
-                )
-            })
 
-class FileUploadForm(BaseStyledForm, forms.ModelForm):
+class FileUploadForm(forms.ModelForm):
     class Meta:
         model = UploadedFile
         fields = ["file"]
-        widgets = {
-            "file": forms.ClearableFileInput(attrs={"class": "hidden"})
-        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+
+    def save(self, commit=True):
+        inst = super().save(commit=False)
+        inst.user = self.user
+        inst.filename = os.path.basename(inst.file.name)
+        inst.size = inst.file.size
+        if commit:
+            inst.save()
+        return inst

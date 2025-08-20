@@ -1,25 +1,106 @@
 {% if files %}
     <ul class="divide-y divide-gray-200">
         {% for f in files %}
-            <li class="py-3 flex justify-between items-center">
-                <div>
-                    <span class="font-medium">{{ f.filename }}</span>
-                    <span class="text-sm text-gray-500">({{ f.size|filesizeformat }})</span>
+            <li class="py-3 flex justify-between items-center" id="f-{{ f.id }}">
+                <div class="min-w-0">
+                    <p class="font-medium text-gray-800 truncate">{{ f.filename }}</p>
+                    <p class="text-sm text-gray-500">
+                        {{ f.uploaded_at|date:"Y-m-d H:i" }} • {{ f.size|filesizeformat }}
+                    </p>
                 </div>
                 <div class="flex space-x-4">
-                    <a href="{% url 'files_html:generate_link' f.id %}"
-                       class="text-blue-500 hover:underline font-medium">
-                        Share
-                    </a>
-                    <button type="button"
-                        class="text-red-500 hover:underline font-medium delete-file"
-                        data-file-id="{{ f.id }}">
-                        Delete
-                    </button>
+                    <!-- Share option -->
+                    <form 
+                        action="{% url 'files_html:generate_link' f.id %}" 
+                        method="post" 
+                        target="_blank" 
+                        style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="text-blue-500 hover:underline font-medium">
+                            Share
+                        </button>
+                    </form>
+                    
+                    <!-- Delete option -->
+                    <form
+                        action="{% url 'files_html:delete_file' f.id %}"
+                        method="post" 
+                        class="delete-form" 
+                        data-item-id="{{ f.id }}" 
+                        style="display:inline">
+                        {% csrf_token %}
+                        <button type="submit" class="text-red-500 hover:underline font-medium">
+                            Delete
+                        </button>
+                    </form>
                 </div>
             </li>
         {% endfor %}
     </ul>
+
+    <!-- Pagination -->
+    {% if paginator.num_pages > 1 %}
+        <nav class="mt-4 flex items-center justify-between" aria-label="Pagination">
+            <div class="text-sm text-gray-600">
+                Page {{ page_obj.number }} of {{ paginator.num_pages }}
+                <span class="ml-2 text-gray-400">•</span>
+                <span class="ml-2">
+                    {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ paginator.count }}
+                </span>
+            </div>
+
+            <div class="flex items-center gap-2">
+                {% if page_obj.has_previous %}
+                    <a 
+                        href="?page=1" 
+                        class="px-3 py-1 rounded-lg border hover:bg-gray-50" 
+                        data-page-link>
+                        First
+                    </a>
+                    <a 
+                        href="?page={{ page_obj.previous_page_number }}" 
+                        class="px-3 py-1 rounded-lg border hover:bg-gray-50" 
+                        data-page-link>
+                        Prev
+                    </a>
+                {% endif %}
+
+                {% for num in paginator.page_range %}
+                    {% if num >= page_obj.number|add:-2 and num <= page_obj.number|add:2 %}
+                        {% if num == page_obj.number %}
+                            <span class="px-3 py-1 rounded-lg bg-blue-500 text-white">
+                                {{ num }}
+                            </span>
+                        {% else %}
+                            <a 
+                                href="?page={{ num }}" 
+                                class="px-3 py-1 rounded-lg border hover:bg-gray-50" 
+                                data-page-link>
+                                {{ num }}
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a 
+                        href="?page={{ page_obj.next_page_number }}" 
+                        class="px-3 py-1 rounded-lg border hover:bg-gray-50" 
+                        data-page-link>
+                        Next
+                    </a>
+                    <a
+                        href="?page={{ paginator.num_pages }}" 
+                        class="px-3 py-1 rounded-lg border hover:bg-gray-50" 
+                        data-page-link>
+                        Last
+                    </a>
+                {% endif %}
+            </div>
+        </nav>
+    {% endif %}
+
 {% else %}
     <p class="text-gray-500">No files uploaded yet.</p>
 {% endif %}

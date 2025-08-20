@@ -4,7 +4,7 @@ from django.contrib.auth import views as auth_views
 from .views import register, CustomLogoutView
 from.forms import CustomAuthenticationForm
 
-app_name = "users_html"
+app_name = "users"
 
 urlpatterns = [
     path("login/", auth_views.LoginView.as_view(
