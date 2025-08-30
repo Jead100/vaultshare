@@ -3,25 +3,33 @@
 
 {% block content %}
 <div class="flex justify-center items-center min-h-[70vh]">
-    <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
-        <h1 class="text-3xl font-bold mb-6 text-gray-800">Create Account</h1>
-        <form method="post" class="space-y-5">
-            {% csrf_token %}
-            {% for field in form %}
-                {% include "_partials/_form_field.html" with field=field %}
-            {% endfor %}
-            <button type="submit"
-                class="w-full bg-green-500 text-white py-3 rounded-xl font-semibold
-                       hover:bg-green-600 hover:shadow-md transition duration-200">
-                Sign Up
-            </button>
-        </form>
-        <p class="mt-6 text-sm text-gray-600 text-center">
-            Already have an account?
-            <a href="{% url 'users:login' %}" class="text-blue-500 hover:underline font-medium">
-                Login
-            </a>
-        </p>
-    </div>
+  <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">Create Account</h1>
+
+    {% if form.non_field_errors %}
+      <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800">
+        {{ form.non_field_errors.0 }}
+      </div>
+    {% endif %}
+
+    <form method="post" class="space-y-5">
+      {% csrf_token %}
+      {% for field in form %}
+        {% include "_partials/_form_field.html" with field=field %}
+      {% endfor %}
+      <button type="submit"
+        class="w-full bg-green-500 text-white py-3 rounded-xl font-semibold
+                 hover:bg-green-600 hover:shadow-md transition duration-200">
+        Sign Up
+      </button>
+    </form>
+
+    <p class="mt-6 text-sm text-gray-600 text-center">
+      Already have an account?
+      <a href="{% url 'users:login' %}" class="text-blue-500 hover:underline font-medium">
+        Login
+      </a>
+    </p>
+  </div>
 </div>
 {% endblock %}
