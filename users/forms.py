@@ -1,12 +1,14 @@
+from django import forms
+from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 
-from .models import User
+User = get_user_model()
 
 
 class AuthTailwindFormMixin:
     """
-    Mixin to apply Tailwind styles to auth forms (login/signup), 
-    skipping hidden + file fields.
+    Mixin to apply Tailwind styles to auth forms, skipping 
+    hidden + file fields.
     """
     base = ("w-full px-4 py-3 border border-gray-300 rounded-xl "
             "focus:outline-none focus:ring-2 focus:ring-blue-400 "
@@ -25,11 +27,24 @@ class AuthTailwindFormMixin:
                 w.attrs.setdefault("placeholder", bf.label)
 
 
-class CustomUserCreationForm(AuthTailwindFormMixin, UserCreationForm):
+class SignUpForm(AuthTailwindFormMixin, UserCreationForm):
+    """
+    Form for registering a new user using email and password only.
+    """
+
     class Meta:
         model = User
-        fields = ["email", "password1", "password2"]
+        fields = ("email",)  # password1/password2 come from UserCreationForm
+        widgets = {
+            "email": forms.EmailInput(
+                attrs={"placeholder": "Email", "class": "form-control"}
+            ),
+        }
 
 
-class CustomAuthenticationForm(AuthTailwindFormMixin, AuthenticationForm):
-    pass
+class EmailAuthenticationForm(AuthTailwindFormMixin, AuthenticationForm):
+    """
+    Override username field to email for login form.
+    """
+
+    username = forms.EmailField(label="Email")
