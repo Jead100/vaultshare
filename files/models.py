@@ -1,6 +1,5 @@
-import uuid
-
 from datetime import timedelta
+import uuid
 
 from django.conf import settings
 from django.db import models
@@ -9,29 +8,28 @@ from django.utils import timezone
 
 class SharedLinkQuerySet(models.QuerySet):
     """
-    Query helper for SharedLink, e.g., active (non-expired) links.
+    Query helpers for SharedLink (e.g., active/non-expired).
     """
+
     def active(self, now=None):
         now = now or timezone.now()
         return self.filter(expires_at__gt=now)
 
 
-class SharedLinkManager(models.Manager):
+class SharedLinkManager(models.Manager.from_queryset(SharedLinkQuerySet)):
     """
-    Manager with helpers for retrieving or creating active links.
+    Manager with a helper for retrieving or creating active links.
     """
-    def get_queryset(self):
-        return SharedLinkQuerySet(self.model, using=self._db)
-    
+
     def get_or_create_active(self, file, ttl=timedelta(minutes=5), now=None):
         """
         Returns an existing active link for the file or creates a new one. 
         """
-        now = now or timezone.now()
-        link = self.get_queryset().active(now).filter(file=file).first()
+        link = self.active(now=now).filter(file=file).first()
         if link:
             return link, False
         
+        now = now or timezone.now()
         return self.create(file=file, expires_at=now + ttl), True
 
 
@@ -66,4 +64,9 @@ class SharedLink(models.Model):
     objects = SharedLinkManager()
 
     def is_expired(self):
-        return timezone.now() > self.expires_at
+        return timezone.now() >= self.expires_at
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["file", "expires_at"]),
+        ]
