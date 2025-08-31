@@ -1,10 +1,15 @@
+from django.urls import path
+
 from rest_framework.routers import DefaultRouter
 
-from ..views.api import UploadedFileViewSet
+from ..views.api import UploadedFileViewSet, SharedLinkMetaView, SharedLinkDownloadView
 
 app_name = "files_api"
 
 router = DefaultRouter()
-router.register(r"", UploadedFileViewSet, basename="files")
+router.register(r"files", UploadedFileViewSet, basename="files")
 
-urlpatterns = router.urls
+urlpatterns = router.urls + [
+    path("shares/<uuid:token>/", SharedLinkMetaView.as_view(), name="share_meta"),
+    path("shares/<uuid:token>/download/", SharedLinkDownloadView.as_view(), name="share_download"),
+]
