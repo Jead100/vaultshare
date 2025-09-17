@@ -1,9 +1,20 @@
+# Python / Django
 __pycache__/
 .pytest_cache/
+*.py[cod]
 *.sqlite3
 
+# Environment
 .venv/
-node_modules/
-media/
+.env
 
+# Node / Tailwind
+node_modules/
+theme/static/css/dist/
+
+# Django static & media
+media/
+staticfiles/
+
+# Dependency locks
 Pipfile.lock

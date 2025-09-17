@@ -1,25 +1,26 @@
+import dj_database_url
+
+from datetime import timedelta
+from decouple import config
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+SECRET_KEY = config('SECRET_KEY')
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-i^!-@!7)t1s&0x_8+urnit$wk#xgn_mc8e700y+1#52pt4)&bu'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = config(
+    'ALLOWED_HOSTS', 
+    default='127.0.0.1, localhost', 
+    cast=lambda v: [s.strip() for s in v.split(',')]
+)
 
 # Application definition
 
 INSTALLED_APPS = [
-    # Django
+    # Django apps
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -27,16 +28,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # 3rd party
+    # Third-party
     "rest_framework",
-    "rest_framework.authtoken",
-    "allauth",
-    "allauth.account",
-    "allauth.socialaccount",
-    "dj_rest_auth",
-    "dj_rest_auth.registration",
+    "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
+    "storages",
+    "drf_spectacular",
 
-    # Tailwind UI
+    # Django-Tailwind
     "theme",
     "tailwind",
 
@@ -48,16 +47,21 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # (WhiteNoise inserted here at index 1 in production),
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
-    # account middleware
-    'allauth.account.middleware.AccountMiddleware',
 ]
+
+# Dev-only apps and middleware
+if DEBUG:
+    INSTALLED_APPS += ['django_browser_reload']
+    MIDDLEWARE.append(
+        "django_browser_reload.middleware.BrowserReloadMiddleware",
+    )
 
 ROOT_URLCONF = 'config.urls'
 
@@ -78,20 +82,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-
 # Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default="sqlite:///db.sqlite3",  # fallback
+        conn_max_age=600
+    )
 }
 
-
 # Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -108,9 +108,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
 
@@ -120,9 +118,7 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-# Static files
-# ------------
+# Static files & Media (dev defaults)
 
 STATIC_URL = "/static/"
 
@@ -132,40 +128,158 @@ MEDIA_URL = "/media/"
 
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Prod-only settings
+if not DEBUG:
+    STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+    STORAGES = {
+        "staticfiles": {
+            # WhiteNoise: hashed filenames + gzip/brotli pre-compression
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+        "default": {
+            # Media (uploads) -> S3
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        },
+    }
+
+    # Insert WhiteNoise right after SecurityMiddleware
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+
+    # Tune cache headers for static assets
+    # WHITENOISE_MAX_AGE = 60 * 60 * 24 * 365   # 1 year
+
+    # S3 creds/settings
+    AWS_STORAGE_BUCKET_NAME = config("AWS_STORAGE_BUCKET_NAME")
+    AWS_ACCESS_KEY_ID = config("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY")
+    AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME", default="us-east-1")
+    AWS_S3_SIGNATURE_VERSION = "s3v4"
+
+    # Keep objects private; generate time-limited links
+    AWS_DEFAULT_ACL = None
+    AWS_QUERYSTRING_AUTH = True
+    AWS_QUERYSTRING_EXPIRE = 300  # TTL (seconds) – 5 minutes
+    AWS_S3_FILE_OVERWRITE = False
+
+    # R2/other S3-compatible targets (optional)
+    AWS_S3_ENDPOINT_URL = config("AWS_S3_ENDPOINT_URL", default=None)
+
+    # Override MEDIA_URL (CDN first, else direct S3)
+    AWS_S3_CUSTOM_DOMAIN = config("AWS_S3_CUSTOM_DOMAIN", default="")
+    MEDIA_URL = (
+        f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+        if AWS_S3_CUSTOM_DOMAIN
+        else f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/"
+    )
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Django Tailwind
-# ---------------
+# Django-Tailwind
 
 TAILWIND_APP_NAME = 'theme'
 
+NPM_BIN_PATH = config('NPM_BIN_PATH', default=None)
+
+# Django Rest Framework
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer"
+    ],
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+        "rest_framework.throttling.ScopedRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        # generic fallbacks
+        "anon": "60/minute",
+        "user": "240/minute",
+
+        # view-specific scopes
+        "shares:meta": "120/minute",
+        "shares:download": "1000/hour",
+    }
+}
+
+# Only enable the Browsable API in development
 if DEBUG:
-    # Add django_browser_reload only in DEBUG mode
-    INSTALLED_APPS += ['django_browser_reload']
-    MIDDLEWARE += [
-        "django_browser_reload.middleware.BrowserReloadMiddleware",
-    ]
+    REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"].append(
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    )
 
-NPM_BIN_PATH = "C:/Program Files/nodejs/npm.cmd"
+# SimpleJWT
 
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=14),
 
-# Part 2 - Auth
-# -------------
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
 
-SITE_ID = 1
+    "UPDATE_LAST_LOGIN": True,          # update User.last_login on token obtain
+    "ALGORITHM": "HS256",               # default HMAC using SECRET_KEY
+    "AUTH_HEADER_TYPES": ("Bearer",),   # use Authorization: Bearer <token>
+    "LEEWAY": 30                        # allow 30s clock skew when validating token exp/nbf
+}
+
+# drf-spectacular
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Vaultshare API",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SECURITY": [{"BearerAuth": []}],
+    "AUTHENTICATION_WHITELIST": [],
+    "APPEND_COMPONENTS": {
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+            }
+        }
+    },
+}
+
+# ---
 
 AUTH_USER_MODEL = "users.User"
 
-ACCOUNT_USER_MODEL_USERNAME_FIELD = None
-ACCOUNT_LOGIN_METHODS = {"email"}
-ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
-ACCOUNT_EMAIL_VERIFICATION = "none" if DEBUG else "mandatory"
-
-
 LOGIN_URL = 'users:login'
-
 LOGIN_REDIRECT_URL = 'core:dashboard'
+LOGOUT_REDIRECT_URL = "home"
+
+# Minimal logging (shows Django errors in console when DEBUG=False)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {"class": "logging.StreamHandler"},
+    },
+    "root": {  # catches everything including Django request errors
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "django.server": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+    },
+}

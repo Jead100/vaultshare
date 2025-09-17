@@ -5,18 +5,25 @@ name = "pypi"
 
 [packages]
 django = "*"
-djangorestframework = "*"
 drf-spectacular = "*"
+djangorestframework-simplejwt = "*"
+djangorestframework = "*"
+gunicorn = "*"
+psycopg2-binary = "*"
+dj-database-url = "*"
+whitenoise = {extras = ["brotli"], version = "*"}
+uvicorn = "*"
 python-decouple = "*"
+django-storages = {extras = ["boto3"], version = "*"}
+
+[dev-packages]
 pytest = "*"
 pytest-django = "*"
 pytest-cov = "*"
-coverage = "*"
-django-tailwind = {extras = ["reload"], version = "*"}
-dj-rest-auth = "*"
-django-allauth = "*"
-
-[dev-packages]
+django-tailwind = "*"
+factory-boy = "*"
+time-machine = "*"
+django-browser-reload = "*"
 
 [requires]
 python_version = "3.13"
