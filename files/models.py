@@ -45,6 +45,13 @@ class UploadedFile(models.Model):
     size = models.PositiveIntegerField()  # in bytes
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "filename"], name="unique_filename_per_user"
+            ),
+        ]
+
     def __str__(self):
         return f"{self.filename} ({self.user.email})"
 

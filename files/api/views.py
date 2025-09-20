@@ -1,24 +1,22 @@
-import mimetypes
-
 from datetime import timedelta
 
-from django.http import FileResponse
+from django.core.files.storage import default_storage
+from django.http import HttpResponseRedirect
 from django.utils import timezone
 
-from rest_framework import permissions, status
+from rest_framework import filters, permissions, status
 from rest_framework.decorators import action
 from rest_framework.generics import GenericAPIView
-from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.throttling import (
     AnonRateThrottle, UserRateThrottle, ScopedRateThrottle
 )
 from rest_framework.viewsets import ModelViewSet
 
-from drf_spectacular.utils import extend_schema, OpenApiResponse
-
+from ..mixins import SharedLinkPresignMixin
 from ..models import UploadedFile, SharedLink
-from ..serializers import (
+from .pagination import FilePagination
+from .serializers import (
     UploadedFileCreateSerializer, UploadedFileReadUpdateSerializer, 
     SharedLinkSerializer, SharedLinkMetaSerializer
 )
@@ -31,11 +29,14 @@ class UploadedFileViewSet(ModelViewSet):
     Supports listing, uploading, retrieving, renaming filenames, and deleting.
     Includes extra actions for creating, revoking, and regenerating share links.
     """
-    
-    # Use multipart/form-data and form parsers to support file uploads
-    parser_classes = [MultiPartParser, FormParser]
 
     permission_classes = [permissions.IsAuthenticated]
+
+    # Filters
+    filter_backends = [filters.OrderingFilter]
+    ordering = ['-uploaded_at', '-id']  # default ordering
+    ordering_fields = ['uploaded_at', 'filename', 'size']
+    pagination_class = FilePagination
 
     def get_queryset(self):
         # Restrict files to those owned by the current user
@@ -89,13 +90,12 @@ class UploadedFileViewSet(ModelViewSet):
             file=file, ttl=timedelta(seconds=expires_in)
         )
         
-        data = SharedLinkSerializer(link, context={"request": request}).data
-
-        # Let client know if a new share link was created
-        data["created"] = created
+        serializer = SharedLinkSerializer(
+            link, context={"request": request}
+        )
 
         return Response(
-            data=data, 
+            serializer.data, 
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK
         )
     
@@ -116,9 +116,10 @@ class UploadedFileViewSet(ModelViewSet):
             file=file, expires_at=now + timedelta(seconds=expires_in)
         )
 
-        data = SharedLinkSerializer(new_link, context={"request": request}).data
-        data["created"] = True
-        return Response(data, status=status.HTTP_201_CREATED)
+        serializer = SharedLinkSerializer(
+            new_link, context={"request": request}
+        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class SharedLinkMetaView(GenericAPIView):
@@ -138,7 +139,7 @@ class SharedLinkMetaView(GenericAPIView):
 
     def get_permissions(self):
         if self.request.method == "DELETE":
-            return [permissions.IsAuthenticated]
+            return [permissions.IsAuthenticated()]
         return [permissions.AllowAny()]
 
     def get(self, request, *args, **kwargs):
@@ -173,9 +174,9 @@ class SharedLinkMetaView(GenericAPIView):
         }, status=status.HTTP_200_OK)
 
 
-class SharedLinkDownloadView(GenericAPIView):
+class SharedLinkDownloadView(SharedLinkPresignMixin, GenericAPIView):
     """
-    API view for downloading a shared file.
+    API view for downloading a shared file via a presigned S3 URL.
     """
 
     permission_classes=[permissions.AllowAny]
@@ -187,7 +188,7 @@ class SharedLinkDownloadView(GenericAPIView):
 
     def get(self, request, *args, **kwargs):
         """
-        Return the file contents with Content-Disposition for download.
+        Validate the token & expiry, then redirect to a short-lived S3 URL.
         """
         link = self.get_object()
 
@@ -197,25 +198,20 @@ class SharedLinkDownloadView(GenericAPIView):
             }, status=status.HTTP_410_GONE)
         
         uploaded = link.file
+        expires_in = self.expires_in_seconds(link)
 
-        # Best-effort content type
-        content_type = \
-            mimetypes.guess_type(uploaded.filename[0]) or "application/octet-stream"
-        
-        response = FileResponse(
-            uploaded.file.open('rb'), 
-            as_attachment=True,
-            filename=uploaded.filename, 
-            content_type=content_type,
+        # Generate presigned URL via django-storages (S3Boto3Storage)
+        url = default_storage.url(
+            uploaded.file.name,
+            expire=expires_in,
+            parameters=self.response_headers(uploaded.filename),
         )
 
-        # Basic cache controls for sensitive content
-        response["Cache-Control"] = "no-store"
-
-        return response
+        # Redirect client to S3
+        return HttpResponseRedirect(url)
 
     def head(self, request, *args, **kwargs):
         """
-        Same as `get()` but returns headers only.
+        Same as `get()` but returns headers only (for HEAD requests).
         """
         return self.get(request, *args, **kwargs)

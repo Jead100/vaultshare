@@ -2,7 +2,7 @@ from django.urls import path
 
 from rest_framework.routers import DefaultRouter
 
-from ..views.api import UploadedFileViewSet, SharedLinkMetaView, SharedLinkDownloadView
+from .views import UploadedFileViewSet, SharedLinkMetaView, SharedLinkDownloadView
 
 app_name = "files_api"
 

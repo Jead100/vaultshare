@@ -11,7 +11,7 @@
                 <div class="flex space-x-4">
                     <!-- Share option -->
                     <form 
-                        action="{% url 'files_html:generate_link' f.id %}" 
+                        action="{% url 'files:generate_link' f.id %}" 
                         method="post" 
                         target="_blank" 
                         style="display:inline;">
@@ -24,7 +24,7 @@
                     
                     <!-- Delete option -->
                     <form
-                        action="{% url 'files_html:delete_file' f.id %}"
+                        action="{% url 'files:delete_file' f.id %}"
                         method="post" 
                         class="delete-form" 
                         data-item-id="{{ f.id }}" 
