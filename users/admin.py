@@ -1,34 +1,43 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.translation import gettext_lazy as _
-from users.models import User
+
+from .models import User
+from .forms import AdminUserCreationForm, AdminUserChangeForm
 
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     """
-    Custom admin for User model without username field.
+    Admin configuration for the custom email-based User model.
     """
 
-    ordering = ["id"]
-    list_display = ["id", "email", "is_staff", "is_active"]
+    add_form = AdminUserCreationForm
+    form = AdminUserChangeForm
+    model = User
 
-    # Fields shown in the admin form
+    ordering = ["id"]
+    list_display = ["id", "email", "name", "is_staff", "is_active", "date_joined"]
+    list_filter = ["is_staff", "is_superuser", "is_active", "groups"]
+
     fieldsets = (
         (None, {"fields": ("email", "password")}),
+        (_("Personal info"), {"fields": ("name",)}),
         (_("Permissions"), {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
         (_("Important dates"), {"fields": ("last_login", "date_joined")}),
     )
+    readonly_fields = ("last_login", "date_joined")
 
-    # Fields used when creating a new user via admin
     add_fieldsets = (
-        (
-            None,
-            {
-                "classes": ("wide",),
-                "fields": ("email", "password1", "password2", "is_active", "is_staff"),
-            },
-        ),
+        (None, {
+            "classes": ("wide",),
+            "fields": (
+                "email", "name", 
+                "password1", "password2", 
+                "is_active", "is_staff", "is_superuser", "groups"
+            ),
+        }),
     )
 
-    search_fields = ["email"]
+    search_fields = ["email", "name"]
+    filter_horizontal = ("groups", "user_permissions")
