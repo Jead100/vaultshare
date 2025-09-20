@@ -15,18 +15,6 @@
     const listBodyEl  = document.getElementById('files-list-body');
     const fileLabel   = document.querySelector('label[for="file-input"]');
 
-    /* ---------------- CSRF (unified) ---------------- */
-    function getCsrfToken() {
-        // Prefer the hidden input if present (works even if cookies are disabled)
-        const fromInput = document.querySelector('input[name=csrfmiddlewaretoken]')?.value;
-        if (fromInput) return fromInput;
-
-        // Fallback: read the cookie set by Django's CsrfViewMiddleware
-        const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
-        return match ? decodeURIComponent(match[1]) : '';
-    }
-    const CSRF_TOKEN = getCsrfToken();
-
     /* --------------- Upload button state --------------- */
     function setUploading(isUploading) {
         if (isUploading) {
@@ -105,10 +93,7 @@
 
             const res = await fetch(uploadForm.action, {
                 method: 'POST',
-                headers: { 
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': CSRF_TOKEN
-                },
+                headers: {'X-Requested-With': 'XMLHttpRequest'},
                 body: formData,
                 credentials: 'same-origin'
             });
@@ -210,13 +195,14 @@
         if (btn) { btn.textContent = 'Deleting...'; btn.disabled = true; }
 
         try {
+            const formData = new FormData(form);
             const res = await fetch(form.action, {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': CSRF_TOKEN,
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json'
                 },
+                body: formData,
                 credentials: 'same-origin',
             });
 
