@@ -1,12 +1,12 @@
 set -o errexit
 
+# Python deps
 pip install -r requirements.txt
 
-# Build Tailwind CSS
+# Tailwind (django-tailwind handles Node deps for the 'theme' app)
+python manage.py tailwind install
 python manage.py tailwind build
 
-# Collect static files
+# Django static & DB
 python manage.py collectstatic --no-input
-
-# Run migrations
 python manage.py migrate
