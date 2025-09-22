@@ -10,7 +10,6 @@ __pycache__/
 
 # Node / Tailwind
 node_modules/
-theme/static/css/dist/
 
 # Django static & media
 media/
