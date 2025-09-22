@@ -11,22 +11,38 @@ SECRET_KEY = config('SECRET_KEY')
 
 DEBUG = config('DEBUG', default=False, cast=bool)
 
+
+# Hosts & CSRF
+
 ALLOWED_HOSTS = config(
     'ALLOWED_HOSTS', 
     default='127.0.0.1, localhost', 
     cast=lambda v: [s.strip() for s in v.split(',')]
 )
 
+CSRF_TRUSTED_ORIGINS = [
+    o.strip()
+    for o in config(
+        "CSRF_TRUSTED_ORIGINS",
+        default="",
+    ).split(",")
+    if o.strip()
+]
+
+
 # Application definition
 
 INSTALLED_APPS = [
+    # Static handling (parity mode)
+    "whitenoise.runserver_nostatic",
+    "django.contrib.staticfiles",
+
     # Django apps
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
 
     # Third-party
     "rest_framework",
@@ -47,7 +63,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # (WhiteNoise inserted here at index 1 in production),
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -155,12 +171,6 @@ if not DEBUG:
             "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
         },
     }
-
-    # Insert WhiteNoise right after SecurityMiddleware
-    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
-
-    # Tune cache headers for static assets
-    # WHITENOISE_MAX_AGE = 60 * 60 * 24 * 365   # 1 year
 
     # S3 creds/settings
     AWS_STORAGE_BUCKET_NAME = config("AWS_STORAGE_BUCKET_NAME")
