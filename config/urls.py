@@ -5,8 +5,8 @@ from django.urls import include, path
 
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 
-from core.views import HomeView
-from users.jwt_views import EmailTokenObtainPairView
+from apps.core.views import HomeView
+from apps.users.jwt_views import EmailTokenObtainPairView
 
 
 urlpatterns = [
@@ -14,13 +14,13 @@ urlpatterns = [
 
     ### UI routes ###
     path("", HomeView.as_view(), name="home"),  # landing page
-    path("dashboard/", include(("core.urls", "core"), namespace="core")),
-    path("auth/", include(("users.urls", "users"), namespace="users")),
-    path("files/", include(("files.urls", "files"), namespace="files")),
+    path("dashboard/", include(("apps.core.urls", "core"), namespace="core")),
+    path("auth/", include(("apps.users.urls", "users"), namespace="users")),
+    path("files/", include(("apps.files.urls", "files"), namespace="files")),
 
     ### API routes ###
     # Files
-    path("api/v1/", include(("files.api.urls", "files_api"), namespace="files_api")),
+    path("api/v1/", include(("apps.files.api.urls", "files_api"), namespace="files_api")),
 
     # JWT auth
     path("api/v1/auth/token/", EmailTokenObtainPairView.as_view(), name="token_obtain_pair"),

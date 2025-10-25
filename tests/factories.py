@@ -4,7 +4,7 @@ from datetime import timedelta
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 
-from files.models import UploadedFile, SharedLink
+from apps.files.models import UploadedFile, SharedLink
 
 User = get_user_model()
 

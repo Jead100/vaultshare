@@ -11,7 +11,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.http import require_POST
 
-from core.utils.request import is_ajax
+from apps.core.utils.request import is_ajax
 from .mixins import SharedLinkLookupMixin, SharedLinkPresignMixin
 from .models import UploadedFile, SharedLink
 

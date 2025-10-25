@@ -56,9 +56,9 @@ INSTALLED_APPS = [
     "tailwind",
 
     # Local apps
-    "core",
-    "files",
-    "users",
+    "apps.core",
+    "apps.files",
+    "apps.users",
 ]
 
 MIDDLEWARE = [
