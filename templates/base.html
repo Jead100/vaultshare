@@ -4,15 +4,17 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>VaulShare{% block title %}{% endblock %}</title>
+    <title>VaultShare{% block title %}{% endblock %}</title>
     {% tailwind_css %}
 </head>
-<body class="bg-gray-100 text-gray-900 h-full">
+<body class="bg-gray-100 text-gray-900 min-h-screen flex flex-col">
     {% include "_partials/_navbar.html" %}
 
-    <main class="max-w-6xl mx-auto px-4 h-full">
+    <main class="flex-grow max-w-6xl mx-auto w-full px-4 pt-4 pb-8">
         {% block content %}{% endblock %}
     </main>
+
+    {% include "_partials/_footer.html" %}
 
     <!-- Site-wide modals or page-specific modal includes -->
     {% block modals %}{% endblock %}

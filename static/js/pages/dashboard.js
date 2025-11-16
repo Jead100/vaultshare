@@ -6,14 +6,19 @@
     window.__dashboardBound = true;
 
     // Elements
-    const fileInput   = document.getElementById('file-input');
-    const fileNameEl  = document.getElementById('file-name');
-    const uploadForm  = document.getElementById('upload-form');
-    const uploadBtn   = document.getElementById('upload-btn');
-    const clearBtn    = document.getElementById('clear-file')
-    const errorsDiv   = document.getElementById('upload-errors');
-    const listBodyEl  = document.getElementById('files-list-body');
-    const fileLabel   = document.querySelector('label[for="file-input"]');
+    const fileInput     = document.getElementById('file-input');
+    const fileNameEl    = document.getElementById('file-name');
+    const uploadForm    = document.getElementById('upload-form');
+    const uploadBtn     = document.getElementById('upload-btn');
+    const clearBtn      = document.getElementById('clear-file')
+    const errorsDiv     = document.getElementById('upload-errors');
+    const listBodyEl    = document.getElementById('files-list-body');
+    const fileLabel     = document.getElementById('file-label');
+    const pickerGroup   = document.getElementById('file-picker-group');
+    const filenameGroup = document.getElementById('filename-group');
+
+    // File selection state helper 
+    const hasFile = () => fileInput.files && fileInput.files.length > 0;
 
     /* --------------- Upload button state --------------- */
     function setUploading(isUploading) {
@@ -23,6 +28,38 @@
             uploadBtn.disabled = true;
         } else {
             uploadBtn.textContent = uploadBtn.dataset.originalText || 'Upload';
+        }
+    }
+
+    /* ---------- File selection UI renderer ---------- */
+    function renderFileSelectUI() {
+        if (hasFile()) {
+            fileNameEl.textContent = fileInput.files[0].name;
+            uploadBtn.disabled = false;
+            clearBtn.classList.remove('hidden');
+            setFilePickerEnabled(false); // disable label once a file is chosen
+        } else {
+            fileNameEl.textContent = 'No file selected';
+            uploadBtn.disabled = true;
+            clearBtn.classList.add('hidden')
+            setFilePickerEnabled(true);
+        }
+        updateUploadSectionVisibility();
+    }
+
+    /* ---------- Upload section visibility updater ---------- */
+    function updateUploadSectionVisibility() {
+        if (window.matchMedia("(max-width: 640px)").matches) {
+            if (hasFile()) {
+                pickerGroup.classList.add("hidden");
+                filenameGroup.classList.remove('hidden');
+            } else {
+                filenameGroup.classList.add('hidden');
+                pickerGroup.classList.remove('hidden');
+            }
+        } else {
+            pickerGroup.classList.remove('hidden');
+            filenameGroup.classList.add('hidden');
         }
     }
 
@@ -50,28 +87,16 @@
         }
     }
 
+    /* ---------- Responsive resize handler ---------- */
+    window.addEventListener('resize', updateUploadSectionVisibility);
+
     /* --------------- File selection UI --------------- */
-    fileInput.addEventListener('change', (e) => {
-        if (e.target.files && e.target.files.length > 0) {
-            fileNameEl.textContent = e.target.files[0].name;
-            uploadBtn.disabled = false;
-            clearBtn.classList.remove('hidden');
-            setFilePickerEnabled(false); // disable label once a file is chosen
-        } else {
-            fileNameEl.textContent = 'No file selected';
-            uploadBtn.disabled = true;
-            clearBtn.classList.add('hidden')
-            setFilePickerEnabled(true);
-        }
-    });
+    fileInput.addEventListener('change', renderFileSelectUI);
 
     /* ---------- Clear selection handler ---------- */
     clearBtn.addEventListener('click', () => {
         uploadForm.reset();
-        fileNameEl.textContent = 'No file selected';
-        uploadBtn.disabled = true;
-        clearBtn.classList.add('hidden');
-        setFilePickerEnabled(true);
+        renderFileSelectUI();
     });
 
     /* --------------- Upload handler --------------- */
@@ -106,11 +131,8 @@
 
                 // Reset form + UI state
                 uploadForm.reset();
-                fileNameEl.textContent = 'No file selected';
-                clearBtn.classList.add('hidden')
-                uploadBtn.disabled = true;
                 setUploading(false);
-                setFilePickerEnabled(true);
+                renderFileSelectUI();
             } else {
                 setUploading(false);
                 if (data?.errors?.file) {

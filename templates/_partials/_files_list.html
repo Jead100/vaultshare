@@ -1,36 +1,48 @@
 {% if files %}
     <ul class="divide-y divide-gray-200">
         {% for f in files %}
-            <li class="py-3 flex justify-between items-center" id="f-{{ f.id }}">
-                <div class="min-w-0">
+            <li class="py-4 md:py-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-0" id="f-{{ f.id }}">
+                <div class="min-w-0 flex-1 w-full">
                     <p class="font-medium text-gray-800 truncate">{{ f.filename }}</p>
                     <p class="text-sm text-gray-500">
                         {{ f.uploaded_at|date:"Y-m-d H:i" }} • {{ f.size|filesizeformat }}
                     </p>
                 </div>
-                <div class="flex space-x-4">
-                    <!-- Share option -->
+
+                <!-- Actions -->
+                <div class="flex flex-col md:flex-row w-full md:w-auto md:space-x-4 gap-2 md:gap-0 justify-center md:justify-end mt-2 md:mt-0">
+                    <!-- Share -->
                     <form 
                         action="{% url 'files:generate_link' f.id %}" 
                         method="post" 
                         target="_blank" 
-                        style="display:inline;">
+                        class="w-full md:w-auto"
+                        style="display:inline;"
+                    >
                         {% csrf_token %}
-                        <button type="submit"
-                                class="text-blue-500 hover:underline font-medium">
+                        <button 
+                            type="submit"
+                            class="w-full md:w-auto text-blue-500 font-medium text-sm md:text-base px-3 py-1 md:py-0 
+                                   rounded-lg border border-blue-300 hover:bg-blue-50"
+                        >
                             Share
                         </button>
                     </form>
                     
-                    <!-- Delete option -->
+                    <!-- Delete -->
                     <form
                         action="{% url 'files:delete_file' f.id %}"
                         method="post" 
-                        class="delete-form" 
+                        class="w-full md:w-auto delete-form" 
                         data-item-id="{{ f.id }}" 
-                        style="display:inline">
+                        style="display:inline"
+                    >
                         {% csrf_token %}
-                        <button type="submit" class="text-red-500 hover:underline font-medium">
+                        <button 
+                            type="submit" 
+                            class="w-full md:w-auto text-red-500 font-medium text-sm md:text-base px-3 py-1 md:py-0 
+                                   rounded-lg border border-red-300 hover:bg-red-50"
+                        >
                             Delete
                         </button>
                     </form>
@@ -41,8 +53,11 @@
 
     <!-- Pagination -->
     {% if paginator.num_pages > 1 %}
-        <nav class="mt-4 flex items-center justify-between" aria-label="Pagination">
-            <div class="text-sm text-gray-600">
+        <nav 
+            class="mt-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 md:gap-0" 
+            aria-label="Pagination"
+        >
+            <div class="text-sm text-gray-600 order-2 md:order-1">
                 Page {{ page_obj.number }} of {{ paginator.num_pages }}
                 <span class="ml-2 text-gray-400">•</span>
                 <span class="ml-2">
@@ -50,18 +65,20 @@
                 </span>
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap justify-center md:justify-end items-center gap-1 md:gap-2 order-1 md:order-2">
                 {% if page_obj.has_previous %}
                     <a 
                         href="?page=1" 
-                        class="px-3 py-1 rounded-lg border hover:bg-gray-50" 
-                        data-page-link>
+                        class="px-2 md:px-3 py-1 rounded-lg border text-xs md:text-sm hover:bg-gray-50" 
+                        data-page-link
+                    >
                         First
                     </a>
                     <a 
                         href="?page={{ page_obj.previous_page_number }}" 
-                        class="px-3 py-1 rounded-lg border hover:bg-gray-50" 
-                        data-page-link>
+                        class="px-2 md:px-3 py-1 rounded-lg border text-xs md:text-sm hover:bg-gray-50" 
+                        data-page-link
+                    >
                         Prev
                     </a>
                 {% endif %}
@@ -69,14 +86,15 @@
                 {% for num in paginator.page_range %}
                     {% if num >= page_obj.number|add:-2 and num <= page_obj.number|add:2 %}
                         {% if num == page_obj.number %}
-                            <span class="px-3 py-1 rounded-lg bg-blue-500 text-white">
+                            <span class="px-2 md:px-3 py-1 rounded-lg bg-blue-500 text-white text-xs md:text-sm">
                                 {{ num }}
                             </span>
                         {% else %}
                             <a 
                                 href="?page={{ num }}" 
-                                class="px-3 py-1 rounded-lg border hover:bg-gray-50" 
-                                data-page-link>
+                                class="px-2 md:px-3 py-1 rounded-lg border text-xs md:text-sm hover:bg-gray-50" 
+                                data-page-link
+                            >
                                 {{ num }}
                             </a>
                         {% endif %}
@@ -86,14 +104,16 @@
                 {% if page_obj.has_next %}
                     <a 
                         href="?page={{ page_obj.next_page_number }}" 
-                        class="px-3 py-1 rounded-lg border hover:bg-gray-50" 
-                        data-page-link>
+                        class="px-2 md:px-3 py-1 rounded-lg border text-xs md:text-sm hover:bg-gray-50" 
+                        data-page-link
+                    >
                         Next
                     </a>
                     <a
                         href="?page={{ paginator.num_pages }}" 
-                        class="px-3 py-1 rounded-lg border hover:bg-gray-50" 
-                        data-page-link>
+                        class="px-2 md:px-3 py-1 rounded-lg border text-xs md:text-sm hover:bg-gray-50" 
+                        data-page-link
+                    >
                         Last
                     </a>
                 {% endif %}

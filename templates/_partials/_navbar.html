@@ -1,17 +1,81 @@
-<nav class="bg-white shadow-sm mb-8">
+<nav class="bg-white shadow-sm sticky top-0 z-50">
     <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
-        <a href="{% url 'home' %}" class="font-bold text-xl text-blue-600">VaultShare</a>
-        <div class="space-x-4">
+        <!-- Logo -->
+        <a href="{% url 'home' %}" class="font-bold text-xl text-blue-600">
+            VaultShare
+        </a>
+        
+        <!-- Desktop Menu (hidden on mobile) -->
+        <div class="hidden md:flex space-x-4">
             {% if user.is_authenticated %}
                 <span class="text-gray-700">{{ user.email }}</span>
                 <form method="post" action="{% url 'users:logout' %}" class="inline">
                     {% csrf_token %}
-                    <button type="submit" class="text-red-500 hover:underline">Logout</button>
+                    <button type="submit" class="text-red-500 hover:underline">
+                        Logout
+                    </button>
                 </form>
             {% else %}
-                <a href="{% url 'users:login' %}" class="text-blue-500 hover:underline">Login</a>
-                <a href="{% url 'users:register' %}" class="text-blue-500 hover:underline">Sign Up</a>
+                <a href="{% url 'users:login' %}" class="text-blue-500 hover:underline">
+                    Login
+                </a>
+                <a href="{% url 'users:register' %}" class="text-blue-500 hover:underline">
+                    Sign Up
+                </a>
+            {% endif %}
+        </div>
+
+        <!-- Mobile Menu Button (hidden on desktop) -->
+        <button class="md:hidden flex flex-col justify-center items-center w-8 h-8 space-y-1.5" 
+                id="mobile-menu-button" 
+                aria-label="Toggle menu">
+            <span class="block w-6 h-0.5 bg-gray-600 transition-transform"></span>
+            <span class="block w-6 h-0.5 bg-gray-600 transition-opacity"></span>
+            <span class="block w-6 h-0.5 bg-gray-600 transition-transform"></span>
+        </button>
+    </div>
+
+    <!-- Mobile Menu (hidden by default) -->
+    <div class="md:hidden hidden bg-white border-t border-gray-200 px-4 py-3" id="mobile-menu">
+        <div class="flex flex-col space-y-3">
+            {% if user.is_authenticated %}
+                <div class="text-gray-700 py-2 border-b border-gray-100">
+                    {{ user.email }}
+                </div>
+                <form method="post" action="{% url 'users:logout' %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="text-red-500 hover:underline w-full text-left py-2">
+                        Logout
+                    </button>
+                </form>
+            {% else %}
+                <a href="{% url 'users:login' %}" class="text-blue-500 hover:underline py-2 border-b border-gray-100">
+                    Login
+                </a>
+                <a href="{% url 'users:register' %}" class="text-blue-500 hover:underline py-2">
+                    Sign Up
+                </a>
             {% endif %}
         </div>
     </div>
 </nav>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const spans = mobileMenuButton.querySelectorAll('span');
+    
+    mobileMenuButton.addEventListener('click', function() {
+        // Toggle mobile menu visibility
+        mobileMenu.classList.toggle('hidden');
+        
+        // Animate hamburger to X
+        spans[0].classList.toggle('rotate-45');
+        spans[0].classList.toggle('translate-y-2');
+        spans[1].classList.toggle('opacity-0');
+        spans[2].classList.toggle('-rotate-45');
+        spans[2].classList.toggle('-translate-y-2');
+    });
+});
+</script>
