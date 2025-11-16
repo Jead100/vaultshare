@@ -1,4 +1,5 @@
 from datetime import timedelta
+from storages.backends.s3boto3 import S3Boto3Storage
 
 from django.core.files.storage import default_storage
 from django.http import HttpResponseRedirect
@@ -198,16 +199,16 @@ class SharedLinkDownloadView(SharedLinkPresignMixin, GenericAPIView):
             }, status=status.HTTP_410_GONE)
         
         uploaded = link.file
-        expires_in = self.expires_in_seconds(link)
 
-        # Generate presigned URL via django-storages (S3Boto3Storage)
-        url = default_storage.url(
-            uploaded.file.name,
-            expire=expires_in,
-            parameters=self.response_headers(uploaded.filename),
-        )
+        # S3-specific kwargs for presigning
+        url_kwargs = {}
+        if isinstance(default_storage, S3Boto3Storage):
+            url_kwargs = {
+                "expire": self.expires_in_seconds(link),
+                "parameters": self.response_headers(uploaded.filename)
+            }
 
-        # Redirect client to S3
+        url = default_storage.url(uploaded.file.name, **url_kwargs)
         return HttpResponseRedirect(url)
 
     def head(self, request, *args, **kwargs):

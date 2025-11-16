@@ -1,4 +1,5 @@
 from datetime import timedelta
+from storages.backends.s3boto3 import S3Boto3Storage
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -113,14 +114,16 @@ class PublicDownloadRedirectView(SharedLinkLookupMixin,
             return render(request, "files/link_expired.html", status=410)
         
         uploaded = link.file
-        expires_in = self.expires_in_seconds(link)
 
-        url = default_storage.url(
-            uploaded.file.name,
-            expire=expires_in,
-            parameters=self.response_headers(uploaded.filename),
-        )
-        
+        # S3-specific kwargs for presigning
+        url_kwargs = {}
+        if isinstance(default_storage, S3Boto3Storage):
+            url_kwargs = {
+                "expire": self.expires_in_seconds(link),
+                "parameters": self.response_headers(uploaded.filename)
+            }
+
+        url = default_storage.url(uploaded.file.name, **url_kwargs)
         return HttpResponseRedirect(url)
 
     def head(self, request, token, *args, **kwargs):
