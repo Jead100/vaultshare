@@ -4,7 +4,7 @@
         <a href="{% url 'home' %}" class="font-bold text-xl text-blue-600">
             VaultShare
         </a>
-        
+
         <!-- Desktop Menu (hidden on mobile) -->
         <div class="hidden md:flex space-x-4">
             {% if user.is_authenticated %}
@@ -26,8 +26,8 @@
         </div>
 
         <!-- Mobile Menu Button (hidden on desktop) -->
-        <button class="md:hidden flex flex-col justify-center items-center w-8 h-8 space-y-1.5" 
-                id="mobile-menu-button" 
+        <button class="md:hidden flex flex-col justify-center items-center w-8 h-8 space-y-1.5"
+                id="mobile-menu-button"
                 aria-label="Toggle menu">
             <span class="block w-6 h-0.5 bg-gray-600 transition-transform"></span>
             <span class="block w-6 h-0.5 bg-gray-600 transition-opacity"></span>
@@ -65,11 +65,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     const mobileMenu = document.getElementById('mobile-menu');
     const spans = mobileMenuButton.querySelectorAll('span');
-    
+
     mobileMenuButton.addEventListener('click', function() {
         // Toggle mobile menu visibility
         mobileMenu.classList.toggle('hidden');
-        
+
         // Animate hamburger to X
         spans[0].classList.toggle('rotate-45');
         spans[0].classList.toggle('translate-y-2');

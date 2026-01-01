@@ -1,18 +1,20 @@
 import pytest
-
 from django.apps import apps
 from django.conf import settings
 from django.test.utils import override_settings
-
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from .factories import PASSWORD
 from .url_helpers import (
-    jwt_obtain_pair_url, jwt_refresh_url, jwt_verify_url, files_list_url
+    files_list_url,
+    jwt_obtain_pair_url,
+    jwt_refresh_url,
+    jwt_verify_url,
 )
 
 # Helpers
+
 
 def _auth_type():
     """
@@ -31,7 +33,9 @@ def _obtain_pair(client: APIClient, email: str, password: str) -> dict:
     assert "access" in data and "refresh" in data
     return data
 
+
 # Tests
+
 
 @pytest.mark.django_db
 def test_obtain_pair_and_access_protected_view(api_client, user):
@@ -83,7 +87,11 @@ def test_tampered_access_token_fails_verification(api_client, user):
     resp = api_client.post(jwt_verify_url(), {"token": tampered})
     assert resp.status_code == status.HTTP_401_UNAUTHORIZED
     body = resp.json()
-    assert body.get("code") in {"token_not_valid", "token_invalid", "authorization_header_missing"}
+    assert body.get("code") in {
+        "token_not_valid",
+        "token_invalid",
+        "authorization_header_missing",
+    }
 
 
 @pytest.mark.django_db

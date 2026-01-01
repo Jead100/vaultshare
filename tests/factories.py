@@ -1,14 +1,15 @@
-import factory
 from datetime import timedelta
 
-from django.utils import timezone
+import factory
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
-from apps.files.models import UploadedFile, SharedLink
+from apps.files.models import SharedLink, UploadedFile
 
 User = get_user_model()
 
 PASSWORD = "pass123!"
+
 
 class UserFactory(factory.django.DjangoModelFactory):
     """
@@ -18,7 +19,7 @@ class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = User
         skip_postgeneration_save = True  # we use create_user
-    
+
     email = factory.sequence(lambda n: f"user{n}@example.com")
     password = PASSWORD  # plaintext; user manager hashes it
 
@@ -57,7 +58,7 @@ class SharedLinkFactory(factory.django.DjangoModelFactory):
     """
     Factory for creating SharedLink instances with a default expiry.
     """
-    
+
     class Meta:
         model = SharedLink
         skip_postgeneration_save = True

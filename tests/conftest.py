@@ -1,5 +1,6 @@
-import pytest
 import tempfile
+
+import pytest
 from rest_framework.test import APIClient
 
 from .factories import UserFactory

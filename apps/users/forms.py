@@ -3,19 +3,20 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm, ReadOnlyPasswordHashField
 from django.utils.translation import gettext_lazy as _
 
-
 User = get_user_model()
 
 
 class AuthTailwindFormMixin:
     """
-    Mixin to apply Tailwind styles to public auth forms, skipping 
+    Mixin to apply Tailwind styles to public auth forms, skipping
     hidden + file fields.
     """
 
-    base = ("w-full px-4 py-3 border border-gray-300 rounded-xl "
-            "focus:outline-none focus:ring-2 focus:ring-blue-400 "
-            "focus:border-transparent bg-gray-50 text-gray-900 transition duration-200")
+    base = (
+        "w-full px-4 py-3 border border-gray-300 rounded-xl "
+        "focus:outline-none focus:ring-2 focus:ring-blue-400 "
+        "focus:border-transparent bg-gray-50 text-gray-900 transition duration-200"
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -36,12 +37,12 @@ class PasswordConfirmMixin(forms.Form):
     """
 
     password1 = forms.CharField(
-        label=_("Password"), 
-        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"})
+        label=_("Password"),
+        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
     )
     password2 = forms.CharField(
-        label=_("Password confirmation"), 
-        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"})
+        label=_("Password confirmation"),
+        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
     )
 
     def clean_password2(self):
@@ -58,7 +59,9 @@ class PasswordConfirmMixin(forms.Form):
             user.save()
         return user
 
+
 # Public auth forms
+
 
 class SignUpForm(AuthTailwindFormMixin, PasswordConfirmMixin, forms.ModelForm):
     """
@@ -67,22 +70,29 @@ class SignUpForm(AuthTailwindFormMixin, PasswordConfirmMixin, forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ("email", "name",)
+        fields = (
+            "email",
+            "name",
+        )
         widgets = {
-            "email": forms.EmailInput(attrs={
-                "placeholder": _("Email"), "autocomplete": "email", "autofocus": True
-            }),
-            "name": forms.TextInput(attrs={
-                "placeholder": _("Name"), "autocomplete": "name"
-            }),
+            "email": forms.EmailInput(
+                attrs={
+                    "placeholder": _("Email"),
+                    "autocomplete": "email",
+                    "autofocus": True,
+                }
+            ),
+            "name": forms.TextInput(
+                attrs={"placeholder": _("Name"), "autocomplete": "name"}
+            ),
         }
 
     def clean_email(self):
-        
         email = self.cleaned_data["email"]
         if User.objects.filter(email__iexact=email).exists():
             raise forms.ValidationError(_("An account with this email already exists."))
         return email
+
 
 class EmailLoginForm(AuthTailwindFormMixin, AuthenticationForm):
     """
@@ -91,7 +101,9 @@ class EmailLoginForm(AuthTailwindFormMixin, AuthenticationForm):
 
     username = forms.EmailField(label=_("Email"))
 
+
 # Admin forms
+
 
 class AdminUserCreationForm(PasswordConfirmMixin, forms.ModelForm):
     """
@@ -120,8 +132,14 @@ class AdminUserChangeForm(forms.ModelForm):
     class Meta:
         model = User
         fields = (
-            "email", "name", "password", "is_active", "is_staff",
-            "is_superuser", "groups", "user_permissions"
+            "email",
+            "name",
+            "password",
+            "is_active",
+            "is_staff",
+            "is_superuser",
+            "groups",
+            "user_permissions",
         )
 
     def clean_password(self):

@@ -1,5 +1,5 @@
-from datetime import timedelta
 import uuid
+from datetime import timedelta
 
 from django.conf import settings
 from django.db import models
@@ -23,12 +23,12 @@ class SharedLinkManager(models.Manager.from_queryset(SharedLinkQuerySet)):
 
     def get_or_create_active(self, file, ttl=timedelta(minutes=5), now=None):
         """
-        Returns an existing active link for the file or creates a new one. 
+        Returns an existing active link for the file or creates a new one.
         """
         link = self.active(now=now).filter(file=file).first()
         if link:
             return link, False
-        
+
         now = now or timezone.now()
         return self.create(file=file, expires_at=now + ttl), True
 
@@ -58,7 +58,7 @@ class UploadedFile(models.Model):
 
 class SharedLink(models.Model):
     """
-    Temporary public link to access an uploaded file. 
+    Temporary public link to access an uploaded file.
 
     Includes a custom manager/queryset for active link retrieval and creation.
     """

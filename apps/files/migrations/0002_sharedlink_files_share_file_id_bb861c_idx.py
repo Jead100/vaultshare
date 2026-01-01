@@ -6,12 +6,14 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('files', '0001_initial'),
+        ("files", "0001_initial"),
     ]
 
     operations = [
         migrations.AddIndex(
-            model_name='sharedlink',
-            index=models.Index(fields=['file', 'expires_at'], name='files_share_file_id_bb861c_idx'),
+            model_name="sharedlink",
+            index=models.Index(
+                fields=["file", "expires_at"], name="files_share_file_id_bb861c_idx"
+            ),
         ),
     ]

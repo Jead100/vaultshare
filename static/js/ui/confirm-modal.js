@@ -1,9 +1,9 @@
 (function () {
     function confirmModal({
-        title = 'Confirm action', 
-        message = 'Are you sure?', 
-        acceptText = 'Confirm', 
-        cancelText = 'Cancel' 
+        title = 'Confirm action',
+        message = 'Are you sure?',
+        acceptText = 'Confirm',
+        cancelText = 'Cancel'
     } = {}) {
         const modal = document.getElementById('confirm-modal');
         if (!modal) {

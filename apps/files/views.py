@@ -1,5 +1,4 @@
 from datetime import timedelta
-from storages.backends.s3boto3 import S3Boto3Storage
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -11,10 +10,12 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.http import require_POST
+from storages.backends.s3boto3 import S3Boto3Storage
 
 from apps.core.utils.request import is_ajax
+
 from .mixins import SharedLinkLookupMixin, SharedLinkPresignMixin
-from .models import UploadedFile, SharedLink
+from .models import SharedLink, UploadedFile
 
 
 class GenerateLinkView(LoginRequiredMixin, View):
@@ -23,31 +24,33 @@ class GenerateLinkView(LoginRequiredMixin, View):
     """
 
     http_method_names = ["post"]
-    
+
     def post(self, request, file_id):
         file = get_object_or_404(UploadedFile, id=file_id, user=request.user)
         link, _created = SharedLink.objects.get_or_create_active(
-            file=file,
-            ttl=timedelta(minutes=5),
-            now=timezone.now()
+            file=file, ttl=timedelta(minutes=5), now=timezone.now()
         )
 
         share_url = request.build_absolute_uri(
             reverse("files:share_page", args=[link.token])
         )
-        return render(request, "files/link_created.html", {
-            "share_url": share_url,
-            "expiry_ts": int(link.expires_at.timestamp()),
-            "server_now_ts": int(timezone.now().timestamp()),
-        })
-    
+        return render(
+            request,
+            "files/link_created.html",
+            {
+                "share_url": share_url,
+                "expiry_ts": int(link.expires_at.timestamp()),
+                "server_now_ts": int(timezone.now().timestamp()),
+            },
+        )
+
 
 @method_decorator(require_POST, name="dispatch")
 class DeleteFileView(LoginRequiredMixin, View):
     """
-    Deletes a user-owned file (POST only). 
+    Deletes a user-owned file (POST only).
 
-    AJAX returns 204 on success or 404 if missing; 
+    AJAX returns 204 on success or 404 if missing;
     non-AJAX redirects with a flash message.
     """
 
@@ -65,7 +68,7 @@ class DeleteFileView(LoginRequiredMixin, View):
             return HttpResponse(status=204)
         messages.success(request, "File deleted.")
         return redirect("core:dashboard")
-    
+
 
 class PublicDownloadView(SharedLinkLookupMixin, View):
     """
@@ -84,7 +87,7 @@ class PublicDownloadView(SharedLinkLookupMixin, View):
             resp = render(request, "files/link_expired.html", status=410)
             resp["Cache-Control"] = "no-store"  # prevent caching
             return resp
-        
+
         # Render the download page with file info + expiry timestamp
         context = {
             "file": link.file,
@@ -96,15 +99,13 @@ class PublicDownloadView(SharedLinkLookupMixin, View):
         return resp
 
 
-class PublicDownloadRedirectView(SharedLinkLookupMixin, 
-                                 SharedLinkPresignMixin,
-                                 View):
+class PublicDownloadRedirectView(SharedLinkLookupMixin, SharedLinkPresignMixin, View):
     """
     Redirects to a presigned S3 URL for a shared file.
 
     Shows an 'expired' page with HTTP 410 if the link is no longer valid.
     """
-    
+
     http_method_names = ["get", "head"]
 
     def get(self, request, token, *args, **kwargs):
@@ -112,7 +113,7 @@ class PublicDownloadRedirectView(SharedLinkLookupMixin,
 
         if link.is_expired():
             return render(request, "files/link_expired.html", status=410)
-        
+
         uploaded = link.file
 
         # S3-specific kwargs for presigning
@@ -120,7 +121,7 @@ class PublicDownloadRedirectView(SharedLinkLookupMixin,
         if isinstance(default_storage, S3Boto3Storage):
             url_kwargs = {
                 "expire": self.expires_in_seconds(link),
-                "parameters": self.response_headers(uploaded.filename)
+                "parameters": self.response_headers(uploaded.filename),
             }
 
         url = default_storage.url(uploaded.file.name, **url_kwargs)

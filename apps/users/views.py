@@ -17,7 +17,6 @@ class SignUpView(CreateView):
     def form_valid(self, form):
         form.save()
         messages.success(
-            self.request,
-            "Your account was created successfully. You can log in now."
+            self.request, "Your account was created successfully. You can log in now."
         )
         return super().form_valid(form)

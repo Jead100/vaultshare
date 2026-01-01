@@ -1,5 +1,6 @@
 from rest_framework.pagination import PageNumberPagination
 
+
 class FilePagination(PageNumberPagination):
     """
     Paginator for file list responses.

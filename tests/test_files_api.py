@@ -1,13 +1,10 @@
-import os
 import pytest
-
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
-
 from rest_framework import status
 
 from .factories import UploadedFileFactory
-from .url_helpers import files_list_url, files_detail_url
+from .url_helpers import files_detail_url, files_list_url
 
 
 # Helper
@@ -25,7 +22,9 @@ def _unwrap_list(data):
         return payload.get("results", payload)
     return payload
 
+
 # Tests
+
 
 @pytest.mark.django_db
 def test_upload_file(auth_client):

@@ -7,7 +7,7 @@
 
     async function doCopy() {
         if (!shareInput || !copyBtn) return;
-        
+
         try {
             await navigator.clipboard.writeText(shareInput.value);
             flashCopied();

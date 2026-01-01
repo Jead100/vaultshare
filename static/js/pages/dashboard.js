@@ -1,6 +1,6 @@
 (function() {
     console.log('dashboard.js loaded')
-    
+
     // Prevent double-binding if template reuses this
     if (window.__dashboardBound) return;
     window.__dashboardBound = true;
@@ -17,7 +17,7 @@
     const pickerGroup   = document.getElementById('file-picker-group');
     const filenameGroup = document.getElementById('filename-group');
 
-    // File selection state helper 
+    // File selection state helper
     const hasFile = () => fileInput.files && fileInput.files.length > 0;
 
     /* --------------- Upload button state --------------- */
@@ -204,8 +204,8 @@
         const fileLabel = row?.querySelector('.font-medium')?.textContent?.trim();
         const confirmed = await window.confirmModal({
             title: 'Delete file',
-            message: fileLabel 
-            ? `Are you sure you want to delete “${fileLabel}”?` 
+            message: fileLabel
+            ? `Are you sure you want to delete “${fileLabel}”?`
             : 'Are you sure you want to delete this file?',
             acceptText: 'Yes, delete',
             cancelText: 'Cancel'

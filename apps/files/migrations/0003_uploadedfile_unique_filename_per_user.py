@@ -7,13 +7,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('files', '0002_sharedlink_files_share_file_id_bb861c_idx'),
+        ("files", "0002_sharedlink_files_share_file_id_bb861c_idx"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddConstraint(
-            model_name='uploadedfile',
-            constraint=models.UniqueConstraint(fields=('user', 'filename'), name='unique_filename_per_user'),
+            model_name="uploadedfile",
+            constraint=models.UniqueConstraint(
+                fields=("user", "filename"), name="unique_filename_per_user"
+            ),
         ),
     ]

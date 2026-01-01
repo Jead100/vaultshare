@@ -3,13 +3,14 @@ from typing import Any
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Page, Paginator
 from django.http import JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.views.generic import TemplateView, View
 
-from .utils.request import is_ajax
-from apps.files.models import UploadedFile
 from apps.files.forms import FileUploadForm
+from apps.files.models import UploadedFile
+
+from .utils.request import is_ajax
 
 
 class HomeView(TemplateView):
@@ -23,7 +24,7 @@ class HomeView(TemplateView):
 class DashboardView(LoginRequiredMixin, View):
     """
     File upload dashboard for logged-in users.
-    Supports AJAX and standard form submissions. 
+    Supports AJAX and standard form submissions.
     """
 
     template_name = "core/dashboard.html"
@@ -37,12 +38,12 @@ class DashboardView(LoginRequiredMixin, View):
         Return a paginated page of the current user's uploaded files.
         Falls back gracefully on invalid or out-of-range page numbers.
         """
-        qs = (UploadedFile.objects
-              .filter(user=request.user)
-              .order_by("-uploaded_at", "-id"))
+        qs = UploadedFile.objects.filter(user=request.user).order_by(
+            "-uploaded_at", "-id"
+        )
         paginator = Paginator(qs, self.PAGE_SIZE)
         return paginator.get_page(page_number)
-    
+
     def _context(self, request, page: Page, form: FileUploadForm | None = None) -> dict:
         """
         Build the template context for rendering.
@@ -67,7 +68,7 @@ class DashboardView(LoginRequiredMixin, View):
         }
 
     # --- HTTP methods ---
-    
+
     def get(self, request):
         page = self._page(request, request.GET.get("page", 1))
         ctx = self._context(request, page)
@@ -75,9 +76,9 @@ class DashboardView(LoginRequiredMixin, View):
         if is_ajax(request):
             html = render_to_string(self.list_partial_template, ctx, request)
             return JsonResponse(self._payload(page, html))
-        
+
         return render(request, self.template_name, ctx)
-    
+
     def post(self, request):
         form = FileUploadForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
@@ -89,13 +90,13 @@ class DashboardView(LoginRequiredMixin, View):
                 ctx = self._context(request, first_page)
                 html = render_to_string(self.list_partial_template, ctx, request)
                 return JsonResponse(self._payload(first_page, html), status=201)
-            
+
             return redirect("core:dashboard")
 
         # Invalid form
         if is_ajax(request):
-            return JsonResponse({"success": False,"errors": form.errors}, status=400)
-        
+            return JsonResponse({"success": False, "errors": form.errors}, status=400)
+
         page = self._page(request, request.GET.get("page", 1))
         ctx = self._context(request, page, form)
         return render(request, self.template_name, ctx, status=400)

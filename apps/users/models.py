@@ -19,7 +19,7 @@ class UserManager(BaseUserManager):
         user.set_password(password)
         user.save(using=self._db)
         return user
-    
+
     create_user.alters_data = True
 
     def create_superuser(self, email, password=None, **extra_fields):
@@ -32,7 +32,7 @@ class UserManager(BaseUserManager):
             raise ValueError("Superuser must have is_superuser=True.")
 
         return self.create_user(email, password, **extra_fields)
-    
+
     create_superuser.alters_data = True
 
 
@@ -43,7 +43,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     email = models.EmailField(_("email address"), unique=True)
     name = models.CharField(_("name"), max_length=150, blank=True)
-    is_active = models.BooleanField(_("active"),default=True)
+    is_active = models.BooleanField(_("active"), default=True)
     is_staff = models.BooleanField(_("staff status"), default=False)
     date_joined = models.DateTimeField(_("date joined"), default=timezone.now)
 
