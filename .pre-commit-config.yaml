@@ -10,7 +10,8 @@ repos:
     rev: 25.1.0
     hooks:
       - id: black
-        args: [--force-exclude]
+        pass_filenames: false
+        args: ["."]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
