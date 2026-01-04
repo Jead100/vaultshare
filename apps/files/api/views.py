@@ -5,14 +5,13 @@ from django.http import HttpResponseRedirect
 from django.utils import timezone
 from rest_framework import filters, permissions, status
 from rest_framework.decorators import action
-from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.throttling import (
     AnonRateThrottle,
     ScopedRateThrottle,
     UserRateThrottle,
 )
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from storages.backends.s3boto3 import S3Boto3Storage
 
 from ..mixins import SharedLinkPresignMixin
@@ -98,7 +97,6 @@ class UploadedFileViewSet(ModelViewSet):
         )
 
         serializer = SharedLinkSerializer(link, context={"request": request})
-
         return Response(
             serializer.data,
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
@@ -125,29 +123,37 @@ class UploadedFileViewSet(ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class SharedLinkMetaView(GenericAPIView):
+class SharedLinkViewSet(SharedLinkPresignMixin, GenericViewSet):
     """
-    API view for retrieving or revoking a shared link.
+    Viewset for interacting with shared file links.
 
-    Anyone may retrieve metadata if the link is not expired.
-    Revoking requires authentication and ownership of the file.
+    - Anyone may retrieve metadata while the link is valid.
+    - Revocation requires authentication and ownership of the file.
+    - Includes an extra action for downloading the shared file via
+      a short-lived storage URL.
     """
 
-    serializer_class = SharedLinkMetaSerializer
     queryset = SharedLink.objects.select_related("file")
+    serializer_class = SharedLinkMetaSerializer
     lookup_field = "token"
 
     throttle_classes = [AnonRateThrottle, UserRateThrottle, ScopedRateThrottle]
-    throttle_scope = "shares:meta"
 
     def get_permissions(self):
-        if self.request.method == "DELETE":
+        if self.action == "destroy":
             return [permissions.IsAuthenticated()]
         return [permissions.AllowAny()]
 
-    def get(self, request, *args, **kwargs):
+    def get_throttles(self):
+        if self.action == "download":
+            self.throttle_scope = "shares:download"
+        else:
+            self.throttle_scope = "shares:meta"
+        return super().get_throttles()
+
+    def retrieve(self, request, *args, **kwargs):
         """
-        Return metadata for a link if not expired.
+        Return public metadata for a shared link if it is still valid.
         """
         link = self.get_object()
 
@@ -157,9 +163,9 @@ class SharedLinkMetaView(GenericAPIView):
         serializer = self.get_serializer(link)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def delete(self, request, *args, **kwargs):
+    def destroy(self, request, *args, **kwargs):
         """
-        Revoke the link by expiring it (owner only).
+        Revoke a shared link by expiring it (owner only).
         """
         link = self.get_object()
 
@@ -172,22 +178,10 @@ class SharedLinkMetaView(GenericAPIView):
         link.save(update_fields=["expires_at"])
         return Response({"detail": "Share link revoked."}, status=status.HTTP_200_OK)
 
-
-class SharedLinkDownloadView(SharedLinkPresignMixin, GenericAPIView):
-    """
-    API view for downloading a shared file via a presigned S3 URL.
-    """
-
-    permission_classes = [permissions.AllowAny]
-    queryset = SharedLink.objects.select_related("file")
-    lookup_field = "token"
-
-    throttle_classes = [AnonRateThrottle, UserRateThrottle, ScopedRateThrottle]
-    throttle_scope = "shares:download"
-
-    def get(self, request, *args, **kwargs):
+    @action(detail=True, methods=["get"], url_path="download")
+    def download(self, request, *args, **kwargs):
         """
-        Validate the token & expiry, then redirect to a short-lived S3 URL.
+        Redirect to a short-lived storage URL for downloading the shared file.
         """
         link = self.get_object()
 
@@ -207,8 +201,12 @@ class SharedLinkDownloadView(SharedLinkPresignMixin, GenericAPIView):
         url = default_storage.url(uploaded.file.name, **url_kwargs)
         return HttpResponseRedirect(url)
 
-    def head(self, request, *args, **kwargs):
+    @download.mapping.head
+    def download_head(self, request, *args, **kwargs):
         """
-        Same as `get()` but returns headers only (for HEAD requests).
+        Handle HEAD requests for the download endpoint.
+
+        Mirrors GET behavior while allowing clients to probe link validity
+        without downloading the file.
         """
-        return self.get(request, *args, **kwargs)
+        return self.download(request, *args, **kwargs)
