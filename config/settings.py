@@ -136,28 +136,39 @@ USE_I18N = True
 
 USE_TZ = True
 
-# Static files & Media (dev defaults)
+# Static files & Media
 
 STATIC_URL = "/static/"
 
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "/media/"
 
 MEDIA_ROOT = BASE_DIR / "media"
 
-# Prod-only settings
-if not DEBUG:
-    STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "static"]
+
+# Use manifest storage only when DEBUG is False
+STATICFILES_BACKEND = (
+    "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    if not DEBUG
+    else "django.contrib.staticfiles.storage.StaticFilesStorage"
+)
+
+# Enable S3 storage for user-uploaded media
+USE_S3 = config("USE_S3", default=False, cast=bool)
+
+if USE_S3:
+    # S3 key prefix for uploaded media files
+    AWS_MEDIA_LOCATION = "media"
 
     STORAGES = {
         "staticfiles": {
-            # WhiteNoise: hashed filenames + gzip/brotli pre-compression
-            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+            "BACKEND": STATICFILES_BACKEND,
         },
         "default": {
-            # Media (uploads) -> S3
             "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+            "OPTIONS": {"location": AWS_MEDIA_LOCATION},
         },
     }
 
@@ -180,10 +191,22 @@ if not DEBUG:
     # Override MEDIA_URL (CDN first, else direct S3)
     AWS_S3_CUSTOM_DOMAIN = config("AWS_S3_CUSTOM_DOMAIN", default="")
     MEDIA_URL = (
-        f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+        f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_MEDIA_LOCATION}/"
         if AWS_S3_CUSTOM_DOMAIN
-        else f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/"
+        else (
+            f"https://{AWS_STORAGE_BUCKET_NAME}.s3."
+            f"{AWS_S3_REGION_NAME}.amazonaws.com/{AWS_MEDIA_LOCATION}/"
+        )
     )
+else:
+    STORAGES = {
+        "staticfiles": {
+            "BACKEND": STATICFILES_BACKEND,
+        },
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+    }
 
 # Default primary key field type
 
