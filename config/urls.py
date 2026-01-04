@@ -31,17 +31,18 @@ urlpatterns = [
     path("api/v1/session-auth/", include("rest_framework.urls")),
 ]
 
-# Dev-only routes
-if settings.DEBUG:
-    # Live reload support (django-browser-reload)
-    urlpatterns += [
-        path("__reload__/", include("django_browser_reload.urls")),
-    ]
-    # Serve media locally
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
 # Optionally expose the Django admin interface
 if settings.EXPOSE_ADMIN:
     urlpatterns += [
         path("admin/", admin.site.urls),
     ]
+
+# Dev-only live reload support
+if settings.DEBUG:
+    urlpatterns += [
+        path("__reload__/", include("django_browser_reload.urls")),
+    ]
+
+# Serve uploaded media locally in development when not using S3
+if settings.DEBUG and not settings.USE_S3:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
