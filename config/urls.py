@@ -13,9 +13,9 @@ from apps.core.views import HomeView
 urlpatterns = [
     # --- UI routes ---
     path("", HomeView.as_view(), name="home"),  # landing page
-    path("dashboard/", include(("apps.core.urls", "core"), namespace="core")),
-    path("auth/", include(("apps.users.urls", "users"), namespace="users")),
-    path("files/", include(("apps.files.urls", "files"), namespace="files")),
+    path("dashboard/", include("apps.core.urls", namespace="core")),
+    path("auth/", include("apps.users.urls", namespace="users")),
+    path("files/", include("apps.files.urls", namespace="files")),
     # --- API routes ---
     # auth (SimpleJWT) #
     path("api/v1/auth/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
@@ -24,9 +24,7 @@ urlpatterns = [
     ),
     path("api/v1/auth/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
     # files #
-    path(
-        "api/v1/", include(("apps.files.api.urls", "files_api"), namespace="files_api")
-    ),
+    path("api/v1/", include("apps.files.api.urls", namespace="files_api")),
     path("api/v1/session-auth/", include("rest_framework.urls")),
 ]
 
