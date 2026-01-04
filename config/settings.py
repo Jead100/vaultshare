@@ -10,6 +10,8 @@ SECRET_KEY = config("SECRET_KEY")
 
 DEBUG = config("DEBUG", default=False, cast=bool)
 
+# Control whether the Django admin interface is exposed
+EXPOSE_ADMIN = config("EXPOSE_ADMIN", default=False, cast=bool)
 
 # Hosts & CSRF
 

@@ -8,7 +8,6 @@ from apps.core.views import HomeView
 from apps.users.jwt_views import EmailTokenObtainPairView
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
     ### UI routes ###
     path("", HomeView.as_view(), name="home"),  # landing page
     path("dashboard/", include(("apps.core.urls", "core"), namespace="core")),
@@ -40,3 +39,9 @@ if settings.DEBUG:
     ]
     # Serve media locally
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Optionally expose the Django admin interface
+if settings.EXPOSE_ADMIN:
+    urlpatterns += [
+        path("admin/", admin.site.urls),
+    ]
