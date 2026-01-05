@@ -6,11 +6,6 @@ from django.utils import timezone
 from rest_framework import filters, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.throttling import (
-    AnonRateThrottle,
-    ScopedRateThrottle,
-    UserRateThrottle,
-)
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from storages.backends.s3boto3 import S3Boto3Storage
 
@@ -136,8 +131,6 @@ class SharedLinkViewSet(SharedLinkPresignMixin, GenericViewSet):
     queryset = SharedLink.objects.select_related("file")
     serializer_class = SharedLinkMetaSerializer
     lookup_field = "token"
-
-    throttle_classes = [AnonRateThrottle, UserRateThrottle, ScopedRateThrottle]
 
     def get_permissions(self):
         if self.action == "destroy":
