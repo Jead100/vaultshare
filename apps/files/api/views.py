@@ -40,6 +40,16 @@ class UploadedFileViewSet(ModelViewSet):
         # Restrict files to those owned by the current user
         return UploadedFile.objects.filter(user=self.request.user)
 
+    def get_throttles(self):
+        # Limit request rates per action
+        if self.action == "create":
+            self.throttle_scope = "files:upload"
+        elif self.action == "share":
+            self.throttle_scope = "files:share"
+        elif self.action == "share_regenerate":
+            self.throttle_scope = "files:share_regenerate"
+        return super().get_throttles()
+
     def get_serializer_class(self):
         return (
             UploadedFileCreateSerializer
@@ -138,7 +148,9 @@ class SharedLinkViewSet(SharedLinkPresignMixin, GenericViewSet):
         return [permissions.AllowAny()]
 
     def get_throttles(self):
-        if self.action == "download":
+        if self.action == "destroy":
+            self.throttle_scope = "shares:revoke"
+        elif self.action == "download":
             self.throttle_scope = "shares:download"
         else:
             self.throttle_scope = "shares:meta"

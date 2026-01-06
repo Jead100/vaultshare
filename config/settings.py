@@ -235,8 +235,13 @@ REST_FRAMEWORK = {
         # generic fallbacks
         "anon": "60/minute",
         "user": "240/minute",
-        # view-specific scopes
+        # files
+        "files:upload": "20/hour",
+        "files:share": "60/hour",
+        "files:share_regenerate": "20/hour",
+        # shares
         "shares:meta": "120/minute",
+        "shares:revoke": "30/minute",
         "shares:download": "1000/hour",
     },
 }
