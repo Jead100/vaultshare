@@ -235,6 +235,10 @@ REST_FRAMEWORK = {
         # generic fallbacks
         "anon": "60/minute",
         "user": "240/minute",
+        # auth
+        "auth:token": "10/minute",
+        "auth:refresh": "30/minute",
+        "auth:verify": "60/minute",
         # files
         "files:upload": "20/hour",
         "files:share": "60/hour",

@@ -2,13 +2,13 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-    TokenVerifyView,
-)
 
 from apps.core.views import HomeView
+from apps.users.throttled_jwt_views import (
+    ThrottledTokenObtainPairView,
+    ThrottledTokenRefreshView,
+    ThrottledTokenVerifyView,
+)
 
 urlpatterns = [
     # --- UI routes ---
@@ -18,11 +18,21 @@ urlpatterns = [
     path("files/", include("apps.files.urls", namespace="files")),
     # --- API routes ---
     # auth (SimpleJWT) #
-    path("api/v1/auth/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path(
-        "api/v1/auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"
+        "api/v1/auth/token/",
+        ThrottledTokenObtainPairView.as_view(),
+        name="token_obtain_pair",
     ),
-    path("api/v1/auth/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
+    path(
+        "api/v1/auth/token/refresh/",
+        ThrottledTokenRefreshView.as_view(),
+        name="token_refresh",
+    ),
+    path(
+        "api/v1/auth/token/verify/",
+        ThrottledTokenVerifyView.as_view(),
+        name="token_verify",
+    ),
     # files #
     path("api/v1/", include("apps.files.api.urls", namespace="files_api")),
     path("api/v1/session-auth/", include("rest_framework.urls")),
