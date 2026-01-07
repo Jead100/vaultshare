@@ -38,14 +38,14 @@ def share_meta_url(token):
     """
     /api/v1/shares/<uuid:token>/
     """
-    return reverse("files_api:share_meta", kwargs={"token": str(token)})
+    return reverse("files_api:shares-detail", kwargs={"token": str(token)})
 
 
 def share_download_url(token):
     """
     /api/v1/shares/<uuid:token>/download/
     """
-    return reverse("files_api:share_download", kwargs={"token": str(token)})
+    return reverse("files_api:shares-download", kwargs={"token": str(token)})
 
 
 # JWT endpoints

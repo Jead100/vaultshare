@@ -141,7 +141,7 @@ class SharedLinkSerializer(serializers.ModelSerializer):
         # Return the absolute URL to the share metadata endpoint for this token
         request = self.context["request"]
         return request.build_absolute_uri(
-            reverse("files_api:share_meta", args=[str(obj.token)])
+            reverse("files_api:shares-detail", args=[str(obj.token)])
         )
 
 
@@ -173,7 +173,7 @@ class SharedLinkMetaSerializer(serializers.ModelSerializer):
     def get_download_api(self, obj):
         request = self.context["request"]
         return request.build_absolute_uri(
-            reverse("files_api:share_download", args=[str(obj.token)])
+            reverse("files_api:shares-download", args=[str(obj.token)])
         )
 
     def get_download_page(self, obj):
