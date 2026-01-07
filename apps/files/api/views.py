@@ -15,6 +15,7 @@ from .pagination import FilePagination
 from .serializers import (
     SharedLinkMetaSerializer,
     SharedLinkSerializer,
+    ShareTTLSerializer,
     UploadedFileCreateSerializer,
     UploadedFileReadUpdateSerializer,
 )
@@ -51,11 +52,17 @@ class UploadedFileViewSet(ModelViewSet):
         return super().get_throttles()
 
     def get_serializer_class(self):
-        return (
-            UploadedFileCreateSerializer
-            if self.action == "create"
-            else UploadedFileReadUpdateSerializer
-        )
+        if self.action == "create":
+            return UploadedFileCreateSerializer
+        if self.action in {"share", "share_regenerate"}:
+            return SharedLinkSerializer
+        return UploadedFileReadUpdateSerializer
+
+    def _get_share_ttl(self):
+        # Validate and return the requested share TTL (seconds)
+        ttl = ShareTTLSerializer(data=self.request.data)
+        ttl.is_valid(raise_exception=True)
+        return ttl.validated_data["expires_in"]
 
     @action(detail=True, methods=["post", "delete"], url_path="share")
     def share(self, request, pk=None):
@@ -86,22 +93,14 @@ class UploadedFileViewSet(ModelViewSet):
             )
 
         # POST:
-        try:
-            expires_in = int(request.data.get("expires_in", 300))
-            if expires_in <= 0:
-                raise ValueError
-        except (TypeError, ValueError):
-            return Response(
-                {"expires_in": ["Must be a positive integer (seconds)."]},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        expires_in = self._get_share_ttl()
 
         # Either reuse the active link or create one with the requested expiry
         link, created = SharedLink.objects.get_or_create_active(
             file=file, ttl=timedelta(seconds=expires_in)
         )
 
-        serializer = SharedLinkSerializer(link, context={"request": request})
+        serializer = self.get_serializer(link, context={"request": request})
         return Response(
             serializer.data,
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
@@ -119,12 +118,13 @@ class UploadedFileViewSet(ModelViewSet):
         SharedLink.objects.active(now).filter(file=file).update(expires_at=now)
 
         # Create a fresh one
-        expires_in = int(request.data.get("expires_in", 300))
+        expires_in = self._get_share_ttl()
+
         new_link = SharedLink.objects.create(
             file=file, expires_at=now + timedelta(seconds=expires_in)
         )
 
-        serializer = SharedLinkSerializer(new_link, context={"request": request})
+        serializer = self.get_serializer(new_link, context={"request": request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 

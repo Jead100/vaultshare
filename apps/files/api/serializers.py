@@ -106,6 +106,16 @@ class UploadedFileReadUpdateSerializer(BaseUploadedFileSerializer):
         return super().update(instance, validated_data)
 
 
+class ShareTTLSerializer(serializers.Serializer):
+    """
+    Input serializer for share link expiration.
+
+    - Optional positive `expires_in` in seconds (default: 300).
+    """
+
+    expires_in = serializers.IntegerField(min_value=1, default=300, required=False)
+
+
 class SharedLinkSerializer(serializers.ModelSerializer):
     """
     Read-only serializer for shared links.
@@ -139,9 +149,9 @@ class SharedLinkMetaSerializer(serializers.ModelSerializer):
     """
     Public metadata for a shared link (read-only).
 
-    Includes filename/size/expiry state and both
-    an API download URL (`download_api`) and an
-    HTML download page ULR(`download_page`)
+    - Includes filename, size, and expiry state.
+    - Both an API download URL (`download_api`) and an
+      HTML download page URL(`download_page`).
     """
 
     filename = serializers.CharField(source="file.filename", read_only=True)
