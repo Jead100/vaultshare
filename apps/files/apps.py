@@ -7,4 +7,4 @@ class FilesConfig(AppConfig):
     label = "files"
 
     def ready(self):
-        pass
+        from . import signals  # noqa: F401
