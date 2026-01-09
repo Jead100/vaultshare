@@ -40,24 +40,28 @@ def test_share_create_invalid_expires_in(auth_client, user):
 @pytest.mark.django_db
 def test_share_delete_revokes(auth_client, user):
     """
-    Returns 204 when an active link is revoked.
+    Returns 200 and reports revoked count when an active link is revoked.
     """
     f = UploadedFileFactory(user=user)
     url = files_share_url(f.id)
+
     auth_client.post(url, {"expires_in": 60}, format="json")
 
     resp = auth_client.delete(url)
-    assert resp.status_code == status.HTTP_204_NO_CONTENT
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json() == {"detail": "Link revoked.", "revoked": 1}
 
 
 @pytest.mark.django_db
 def test_share_delete_when_none_active(auth_client, user):
     """
-    Returns 204 when nothing to revoke.
+    Returns 204 and revoked=0 when there is no active link to revoke.
     """
     f = UploadedFileFactory(user=user)
+
     resp = auth_client.delete(files_share_url(f.id))
-    assert resp.status_code == status.HTTP_204_NO_CONTENT
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json() == {"detail": "No active link to revoke.", "revoked": 0}
 
 
 # UploadedFileViewSet @action: POST /files/{id}/share/regenerate/

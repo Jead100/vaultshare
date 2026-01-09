@@ -105,9 +105,17 @@ class UploadedFileViewSet(ModelViewSet):
         Revoke the active share link by expiring it.
         """
         file = self.get_object()
+
+        # Revoke any active link
         now = timezone.now()
-        SharedLink.objects.active(now).filter(file=file).update(expires_at=now)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        revoked = (
+            SharedLink.objects.active(now).filter(file=file).update(expires_at=now)
+        )
+
+        detail = "Link revoked." if revoked else "No active link to revoke."
+        return Response(
+            {"detail": detail, "revoked": revoked}, status=status.HTTP_200_OK
+        )
 
     @action(detail=True, methods=["post"], url_path="share/regenerate")
     def share_regenerate(self, request, pk=None):
