@@ -5,6 +5,7 @@ from django.http import HttpResponseRedirect
 from django.utils import timezone
 from rest_framework import filters, permissions, status
 from rest_framework.decorators import action
+from rest_framework.exceptions import UnsupportedMediaType
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from storages.backends.s3boto3 import S3Boto3Storage
@@ -63,6 +64,17 @@ class UploadedFileViewSet(ModelViewSet):
         ttl = ShareTTLSerializer(data=self.request.data)
         ttl.is_valid(raise_exception=True)
         return ttl.validated_data["expires_in"]
+
+    def create(self, request, *args, **kwargs):
+        """
+        Override default `create` to enforce multipart/form-data uploads.
+        """
+        ct = (request.content_type or "").lower()
+        if not ct.startswith("multipart/form-data"):
+            raise UnsupportedMediaType(
+                request.content_type, detail="Uploads must use multipart/form-data"
+            )
+        return super().create(request, *args, **kwargs)
 
     # File sharing actions
 
