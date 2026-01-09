@@ -64,35 +64,16 @@ class UploadedFileViewSet(ModelViewSet):
         ttl.is_valid(raise_exception=True)
         return ttl.validated_data["expires_in"]
 
-    @action(detail=True, methods=["post", "delete"], url_path="share")
+    # File sharing actions
+
+    @action(detail=True, methods=["post"], url_path="share")
     def share(self, request, pk=None):
         """
-        Manage the share link for a file.
+        Create or return an active share link for the file.
 
-        - POST: Create or return the active share link (optional `expires_in`).
-        - DELETE: Revoke the active share link.
+        Optionally accepts `expires_in` (seconds) to control link expiration.
         """
         file = self.get_object()
-
-        if request.method == "DELETE":
-            # Revoke any active link
-            now = timezone.now()
-            revoked = (
-                SharedLink.objects.active(now).filter(file=file).update(expires_at=now)
-            )
-
-            if revoked == 0:
-                return Response(
-                    {"detail": "No active link exists. Nothing revoked."},
-                    status=status.HTTP_200_OK,
-                )
-
-            return Response(
-                {"detail": "Link revoked.", "revoked": revoked},
-                status=status.HTTP_200_OK,
-            )
-
-        # POST:
         expires_in = self._get_share_ttl()
 
         # Either reuse the active link or create one with the requested expiry
@@ -106,10 +87,22 @@ class UploadedFileViewSet(ModelViewSet):
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
 
+    @share.mapping.delete
+    def share_delete(self, request, pk=None):
+        """
+        Revoke the active share link by expiring it.
+        """
+        file = self.get_object()
+        now = timezone.now()
+        SharedLink.objects.active(now).filter(file=file).update(expires_at=now)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     @action(detail=True, methods=["post"], url_path="share/regenerate")
     def share_regenerate(self, request, pk=None):
         """
-        Force-generate a new token, expiring any current active link.
+        Regenerate the share link for the file, expiring any existing one.
+
+        Optionally accepts `expires_in` (seconds) to control link expiration.
         """
         file = self.get_object()
 
