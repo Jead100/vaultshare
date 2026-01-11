@@ -35,7 +35,6 @@ urlpatterns = [
     ),
     # files #
     path("api/v1/", include("apps.files.api.urls", namespace="files_api")),
-    path("api/v1/session-auth/", include("rest_framework.urls")),
 ]
 
 # Optionally expose the Django admin interface

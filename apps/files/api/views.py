@@ -8,7 +8,6 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import UnsupportedMediaType
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
-from rest_framework_simplejwt.authentication import JWTAuthentication
 from storages.backends.s3boto3 import S3Boto3Storage
 
 from ..mixins import SharedLinkPresignMixin
@@ -152,7 +151,6 @@ class SharedLinkViewSet(SharedLinkPresignMixin, GenericViewSet):
       a short-lived storage URL.
     """
 
-    authentication_classes = [JWTAuthentication]
     queryset = SharedLink.objects.select_related("file")
     serializer_class = SharedLinkMetaSerializer
     lookup_field = "token"
