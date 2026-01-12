@@ -1,13 +1,19 @@
 from datetime import timedelta
 
 from django.utils import timezone
-from rest_framework import filters, permissions, status
+from drf_spectacular.utils import (
+    extend_schema,
+    extend_schema_view,
+    inline_serializer,
+)
+from rest_framework import filters, permissions, serializers, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import UnsupportedMediaType
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from ...models import SharedLink, UploadedFile
+from ..openapi import file_id_param
 from ..pagination import FilePagination
 from ..serializers import (
     SharedLinkSerializer,
@@ -17,6 +23,42 @@ from ..serializers import (
 )
 
 
+@extend_schema(tags=["Files"])
+@extend_schema_view(
+    # OpenAPI schema for default CRUD actions is defined here;
+    # custom actions are documented at the method level.
+    list=extend_schema(
+        summary="List uploaded files",
+        description=(
+            "Returns a paginated list of files owned by the authenticated user."
+        ),
+    ),
+    retrieve=extend_schema(
+        summary="Retrieve a file",
+        description=(
+            "Returns metadata for a single file owned by the authenticated user."
+        ),
+        parameters=[file_id_param],
+    ),
+    create=extend_schema(
+        summary="Upload a new file",
+        description="Uploads a new file and returns its metadata.",
+    ),
+    update=extend_schema(exclude=True),
+    partial_update=extend_schema(
+        summary="Update file metadata",
+        description=(
+            "Partially updates file metadata (e.g., filename) for a file owned "
+            "by the authenticated user."
+        ),
+        parameters=[file_id_param],
+    ),
+    destroy=extend_schema(
+        summary="Delete a file",
+        description="Permanently deletes a file owned by the authenticated user.",
+        parameters=[file_id_param],
+    ),
+)
 class UploadedFileViewSet(ModelViewSet):
     """
     Viewset for managing user-uploaded files.
@@ -73,6 +115,16 @@ class UploadedFileViewSet(ModelViewSet):
 
     # File sharing actions
 
+    @extend_schema(
+        summary="Create or return a share link",
+        description=(
+            "Creates (or returns) a share link for a file.\n\n"
+            "Optionally accepts `expires_in` (seconds). If omitted, a default TTL is used."
+        ),
+        parameters=[file_id_param],
+        request=ShareTTLSerializer,
+        responses={200: SharedLinkSerializer, 201: SharedLinkSerializer},
+    )
     @action(detail=True, methods=["post"], url_path="share")
     def share(self, request, pk=None):
         """
@@ -94,6 +146,21 @@ class UploadedFileViewSet(ModelViewSet):
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
 
+    @extend_schema(
+        summary="Revoke the share link",
+        description="Revokes the share link for a file (if any).",
+        parameters=[file_id_param],
+        request=None,
+        responses={
+            200: inline_serializer(
+                name="ShareDeleteResponse",
+                fields={
+                    "detail": serializers.CharField(),
+                    "revoked": serializers.IntegerField(),
+                },
+            ),
+        },
+    )
     @share.mapping.delete
     def share_delete(self, request, pk=None):
         """
@@ -112,6 +179,16 @@ class UploadedFileViewSet(ModelViewSet):
             {"detail": detail, "revoked": revoked}, status=status.HTTP_200_OK
         )
 
+    @extend_schema(
+        summary="Regenerate the share link",
+        description=(
+            "Regenerates the share token for a file, invalidating the previous link.\n\n"
+            "Optionally accepts `expires_in` (seconds)."
+        ),
+        parameters=[file_id_param],
+        request=ShareTTLSerializer,
+        responses={201: SharedLinkSerializer},
+    )
     @action(detail=True, methods=["post"], url_path="share/regenerate")
     def share_regenerate(self, request, pk=None):
         """

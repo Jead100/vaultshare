@@ -247,6 +247,7 @@ REST_FRAMEWORK = {
         "shares:revoke": "30/minute",
         "shares:download": "1000/hour",
     },
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 # Only enable the Browsable API in development
@@ -271,8 +272,6 @@ SIMPLE_JWT = {
 # drf-spectacular
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Vaultshare API",
-    "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
     "SECURITY": [{"BearerAuth": []}],
@@ -286,6 +285,30 @@ SPECTACULAR_SETTINGS = {
             }
         }
     },
+    # ---
+    "TITLE": "Vaultshare API",
+    "DESCRIPTION": (
+        "REST API for VaultShare. Authentication uses JWT (Bearer tokens)."
+    ),
+    "VERSION": "1.0.0",
+    "TAGS": [
+        {
+            "name": "Authentication",
+            "description": (
+                "Endpoints for obtaining, refreshing, and verifying JSON Web Tokens (JWT)."
+            ),
+        },
+        {
+            "name": "Files",
+            "description": "Endpoints for uploading, managing, and sharing files.",
+        },
+        {
+            "name": "Shares",
+            "description": (
+                "Endpoints for shared link metadata, downloads, and link revocation."
+            ),
+        },
+    ],
 }
 
 # ---

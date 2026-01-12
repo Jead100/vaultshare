@@ -1,7 +1,13 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.contrib.auth.decorators import login_required
 from django.urls import include, path
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView,
+)
 
 from apps.core.views import HomeView
 from apps.users.throttled_jwt_views import (
@@ -35,6 +41,22 @@ urlpatterns = [
     ),
     # files #
     path("api/v1/", include("apps.files.api.urls", namespace="files_api")),
+    # --- API documentation (login required) ---
+    path(
+        "api/schema/",
+        login_required(SpectacularAPIView.as_view()),
+        name="api-schema",
+    ),
+    path(
+        "api/docs/",
+        login_required(SpectacularSwaggerView.as_view(url_name="api-schema")),
+        name="swagger-ui",
+    ),
+    path(
+        "api/redoc/",
+        login_required(SpectacularRedocView.as_view(url_name="api-schema")),
+        name="redoc",
+    ),
 ]
 
 # Optionally expose the Django admin interface
