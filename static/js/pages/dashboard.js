@@ -1,4 +1,4 @@
-(function() {
+(function () {
     console.log('dashboard.js loaded')
 
     // Prevent double-binding if template reuses this
@@ -6,15 +6,15 @@
     window.__dashboardBound = true;
 
     // Elements
-    const fileInput     = document.getElementById('file-input');
-    const fileNameEl    = document.getElementById('file-name');
-    const uploadForm    = document.getElementById('upload-form');
-    const uploadBtn     = document.getElementById('upload-btn');
-    const clearBtn      = document.getElementById('clear-file')
-    const errorsDiv     = document.getElementById('upload-errors');
-    const listBodyEl    = document.getElementById('files-list-body');
-    const fileLabel     = document.getElementById('file-label');
-    const pickerGroup   = document.getElementById('file-picker-group');
+    const fileInput = document.getElementById('file-input');
+    const fileNameEl = document.getElementById('file-name');
+    const uploadForm = document.getElementById('upload-form');
+    const uploadBtn = document.getElementById('upload-btn');
+    const clearBtn = document.getElementById('clear-file')
+    const errorsDiv = document.getElementById('upload-errors');
+    const listBodyEl = document.getElementById('files-list-body');
+    const fileLabel = document.getElementById('file-label');
+    const pickerGroup = document.getElementById('file-picker-group');
     const filenameGroup = document.getElementById('filename-group');
 
     // File selection state helper
@@ -97,6 +97,7 @@
     clearBtn.addEventListener('click', () => {
         uploadForm.reset();
         renderFileSelectUI();
+        errorsDiv.textContent = '';
     });
 
     /* --------------- Upload handler --------------- */
@@ -118,7 +119,7 @@
 
             const res = await fetch(uploadForm.action, {
                 method: 'POST',
-                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 body: formData,
                 credentials: 'same-origin'
             });
@@ -205,8 +206,8 @@
         const confirmed = await window.confirmModal({
             title: 'Delete file',
             message: fileLabel
-            ? `Are you sure you want to delete “${fileLabel}”?`
-            : 'Are you sure you want to delete this file?',
+                ? `Are you sure you want to delete “${fileLabel}”?`
+                : 'Are you sure you want to delete this file?',
             acceptText: 'Yes, delete',
             cancelText: 'Cancel'
         });
@@ -248,7 +249,7 @@
             try {
                 const data = await res.json();
                 if (data?.detail) msg = data.detail;
-            } catch {}
+            } catch { }
             alert(msg);
         } catch {
             alert('Could not delete file. Please try again.');
