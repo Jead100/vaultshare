@@ -30,6 +30,42 @@ CSRF_TRUSTED_ORIGINS = [
     if o.strip()
 ]
 
+# Upload policy & security
+
+ALLOW_ANY_FILE_TYPE = config("ALLOW_ANY_FILE_TYPE", default=False, cast=bool)
+
+# 25 MB default
+MAX_UPLOAD_SIZE = config("MAX_UPLOAD_SIZE", default=25 * 1024 * 1024, cast=int)
+
+# Hard limits for incoming request bodies (especially file uploads)
+DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE
+FILE_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE
+
+ALLOWED_UPLOAD_EXTENSIONS = {
+    ".pdf",
+    ".txt",
+    ".docx",
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".zip",
+    ".csv",
+    ".json",
+}
+
+# Allowed content types (best-effort check)
+ALLOWED_UPLOAD_MIME_TYPES = {
+    "application/pdf",
+    "text/plain",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "image/jpeg",
+    "image/png",
+    "application/zip",
+    "application/x-zip-compressed",
+    "text/csv",
+    "application/csv",
+    "application/json",
+}
 
 # Application definition
 

@@ -1,10 +1,12 @@
 import os
 import re
 
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.urls import reverse
 from rest_framework import serializers
 
 from ..models import SharedLink, UploadedFile
+from ..upload_policy import validate_uploaded_file
 
 INVALID_CHARS_RE = re.compile(r'[\\/:*?"<>|]')
 
@@ -18,7 +20,10 @@ class BaseUploadedFileSerializer(serializers.ModelSerializer):
     """
 
     filename = serializers.CharField(
-        required=False, allow_blank=False, trim_whitespace=True, max_length=255
+        required=False,
+        allow_blank=False,
+        trim_whitespace=True,
+        max_length=255,
     )
 
     class Meta:
@@ -57,7 +62,24 @@ class UploadedFileCreateSerializer(BaseUploadedFileSerializer):
     """
 
     class Meta(BaseUploadedFileSerializer.Meta):
-        extra_kwargs = {"file": {"required": True}, "filename": {"required": False}}
+        extra_kwargs = {
+            "file": {"required": True},
+            "filename": {"required": False},
+        }
+
+    def validate_file(self, file):
+        try:
+            # Enforce the configured upload policy (extension, MIME, size)
+            validate_uploaded_file(
+                file,
+                filename=file.name,
+                content_type=getattr(file, "content_type", None),
+            )
+        except DjangoValidationError as e:
+            # Translate Django validation errors into DRF-friendly errors
+            raise serializers.ValidationError(e.messages) from None
+
+        return file
 
     def create(self, validated_data):
         file = validated_data["file"]
