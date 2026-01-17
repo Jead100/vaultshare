@@ -43,6 +43,7 @@ from ..serializers import (
     create=extend_schema(
         summary="Upload a new file",
         description="Uploads a new file and returns its metadata.",
+        request={"multipart/form-data": UploadedFileCreateSerializer},
     ),
     update=extend_schema(exclude=True),
     partial_update=extend_schema(
@@ -104,7 +105,7 @@ class UploadedFileViewSet(ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """
-        Override default `create` to enforce multipart/form-data uploads.
+        Override default `create` to restrict file uploads to multipart/form-data.
         """
         ct = (request.content_type or "").lower()
         if not ct.startswith("multipart/form-data"):
