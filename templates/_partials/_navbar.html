@@ -1,7 +1,11 @@
 <nav class="bg-white shadow-sm sticky top-0 z-50">
     <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
         <!-- Logo -->
-        <a href="{% url 'home' %}" class="font-bold text-xl text-blue-600">
+        <a
+            href="{% url 'home' %}"
+            title="Go to the homepage"
+            class="font-bold text-xl text-blue-600"
+        >
             VaultShare
         </a>
 
@@ -9,6 +13,18 @@
         <div class="hidden md:flex space-x-4">
             {% if user.is_authenticated %}
                 <span class="text-gray-700">{{ user.email }}</span>
+                <a
+                    href="{% url 'swagger-ui' %}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Open Swagger UI in a new tab"
+                    class="relative inline-block text-blue-500 hover:underline"
+                >
+                    API Docs
+                    <span aria-hidden="true" class="absolute -top-0.5 -right-2 text-[10px] opacity-70">
+                        ↗︎
+                    </span>
+                </a>
                 <form method="post" action="{% url 'users:logout' %}" class="inline">
                     {% csrf_token %}
                     <button type="submit" class="text-red-500 hover:underline">
@@ -42,6 +58,17 @@
                 <div class="text-gray-700 py-2 border-b border-gray-100">
                     {{ user.email }}
                 </div>
+                <a
+                    href="{% url 'swagger-ui' %}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-blue-500 hover:underline py-2 border-b border-gray-100"
+                >
+                    API Docs
+                    <span aria-hidden="true" class="opacity-70">
+                        ↗︎
+                    </span>
+                </a>
                 <form method="post" action="{% url 'users:logout' %}" class="inline">
                     {% csrf_token %}
                     <button type="submit" class="text-red-500 hover:underline w-full text-left py-2">

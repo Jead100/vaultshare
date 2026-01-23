@@ -1,10 +1,29 @@
 <footer class="bg-white border-gray-200 py-2 shadow-[0_-1px_2px_0_rgba(0,0,0,0.06)]">
     <div class="max-w-6xl mx-auto px-4 flex items-center justify-between text-xs text-gray-500">
         <span>&copy; {% now "Y" %} VaultShare</span>
-        <span>Made by
-            <a href="https://yourportfolio.com" class="text-blue-600 hover:text-blue-700 font-medium">
-                Jordan Ascanoa
+
+        <span class="flex items-center gap-2">
+            <a
+                href="{% url 'swagger-ui' %}"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Open Swagger UI in a new tab"
+                class="text-blue-600 hover:text-blue-700 font-medium"
+            >
+                API Docs
             </a>
+            <span aria-hidden="true">·</span>
+            <span>Made by
+                <a
+                    href="https://yourportfolio.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Visit portfolio"
+                    class="text-blue-600 hover:text-blue-700 font-medium"
+                >
+                    Jordan Ascanoa
+                </a>
+            </span>
         </span>
     </div>
 </footer>
