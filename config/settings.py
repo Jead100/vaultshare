@@ -67,6 +67,20 @@ ALLOWED_UPLOAD_MIME_TYPES = {
     "application/json",
 }
 
+# Per-user quota
+MAX_USER_STORAGE_BYTES = config(
+    "MAX_USER_STORAGE_BYTES",
+    default=500 * 1024 * 1024,  # 500 MB
+    cast=int,
+)
+
+# File expiration (0 means "no TTL")
+DEFAULT_FILE_TTL_SECONDS = config(
+    "DEFAULT_FILE_TTL_SECONDS",
+    default=0,
+    cast=int,
+)
+
 # Application definition
 
 INSTALLED_APPS = [

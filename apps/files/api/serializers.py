@@ -6,6 +6,8 @@ from django.urls import reverse
 from rest_framework import serializers
 
 from ..models import SharedLink, UploadedFile
+from ..quota import enforce_user_quota
+from ..ttl import compute_expires_at
 from ..upload_policy import validate_uploaded_file
 
 INVALID_CHARS_RE = re.compile(r'[\\/:*?"<>|]')
@@ -75,6 +77,10 @@ class UploadedFileCreateSerializer(BaseUploadedFileSerializer):
                 filename=file.name,
                 content_type=getattr(file, "content_type", None),
             )
+            # Enforce per-user storage quota
+            enforce_user_quota(
+                self.context["request"].user, int(getattr(file, "size", 0) or 0)
+            )
         except DjangoValidationError as e:
             # Translate Django validation errors into DRF-friendly errors
             raise serializers.ValidationError(e.messages) from None
@@ -96,9 +102,16 @@ class UploadedFileCreateSerializer(BaseUploadedFileSerializer):
 
         self.enforce_filename_uniqueness(user, final_name)
 
+        # Set upload metadata
         validated_data["filename"] = final_name
         validated_data["size"] = file.size
         validated_data["user"] = user
+
+        # Set optional expiration (TTL)
+        expires_at = compute_expires_at()
+        if expires_at:
+            validated_data["expires_at"] = expires_at
+
         return super().create(validated_data)
 
 

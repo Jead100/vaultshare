@@ -44,6 +44,7 @@ class UploadedFile(models.Model):
     filename = models.CharField(max_length=255)
     size = models.PositiveIntegerField()  # in bytes
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(null=True, blank=True, db_index=True)
 
     class Meta:
         constraints = [
