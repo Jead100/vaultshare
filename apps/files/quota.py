@@ -5,7 +5,6 @@ Helpers for enforcing per-user storage quotas on uploads.
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db.models import Sum
-from django.utils import timezone
 
 from .models import UploadedFile
 
@@ -14,11 +13,7 @@ def get_user_storage_used_bytes(user) -> int:
     """
     Return the total storage used by a user in bytes, excluding expired uploads.
     """
-    agg = (
-        UploadedFile.objects.filter(user=user)
-        .exclude(expires_at__isnull=False, expires_at__lte=timezone.now())
-        .aggregate(total=Sum("size"))
-    )
+    agg = UploadedFile.objects.filter(user=user).active().aggregate(total=Sum("size"))
     return int(agg["total"] or 0)
 
 

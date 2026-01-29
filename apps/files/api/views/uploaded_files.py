@@ -78,7 +78,7 @@ class UploadedFileViewSet(ModelViewSet):
 
     def get_queryset(self):
         # Restrict files to those owned by the current user
-        return UploadedFile.objects.filter(user=self.request.user)
+        return UploadedFile.objects.filter(user=self.request.user).active()
 
     def get_throttles(self):
         # Limit request rates per action

@@ -74,10 +74,13 @@ MAX_USER_STORAGE_BYTES = config(
     cast=int,
 )
 
-# File expiration (0 means "no TTL")
+# Demo mode enables stricter limits and automatic expirations
+DEMO_MODE = config("DEMO_MODE", default=False, cast=bool)
+
+# Default file TTL in seconds (0 = no expiration)
 DEFAULT_FILE_TTL_SECONDS = config(
     "DEFAULT_FILE_TTL_SECONDS",
-    default=0,
+    default=(24 * 3600 if DEMO_MODE else 0),
     cast=int,
 )
 

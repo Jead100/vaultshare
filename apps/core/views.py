@@ -38,8 +38,10 @@ class DashboardView(LoginRequiredMixin, View):
         Return a paginated page of the current user's uploaded files.
         Falls back gracefully on invalid or out-of-range page numbers.
         """
-        qs = UploadedFile.objects.filter(user=request.user).order_by(
-            "-uploaded_at", "-id"
+        qs = (
+            UploadedFile.objects.filter(user=request.user)
+            .active()
+            .order_by("-uploaded_at", "-id")
         )
         paginator = Paginator(qs, self.PAGE_SIZE)
         return paginator.get_page(page_number)

@@ -5,6 +5,18 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
+# QuerySet / manager helpers
+
+
+class UploadedFileQuerySet(models.QuerySet):
+    """
+    Query helpers for UploadedFile (e.g., active/non-expired).
+    """
+
+    def active(self, now=None):
+        now = now or timezone.now()
+        return self.exclude(expires_at__isnull=False, expires_at__lte=now)
+
 
 class SharedLinkQuerySet(models.QuerySet):
     """
@@ -33,6 +45,9 @@ class SharedLinkManager(models.Manager.from_queryset(SharedLinkQuerySet)):
         return self.create(file=file, expires_at=now + ttl), True
 
 
+# Models
+
+
 class UploadedFile(models.Model):
     """
     A file uploaded by a user.
@@ -45,6 +60,8 @@ class UploadedFile(models.Model):
     size = models.PositiveIntegerField()  # in bytes
     uploaded_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(null=True, blank=True, db_index=True)
+
+    objects = UploadedFileQuerySet.as_manager()
 
     class Meta:
         constraints = [
