@@ -3,6 +3,8 @@ import re
 
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.urls import reverse
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from ..models import SharedLink, UploadedFile
@@ -172,7 +174,8 @@ class SharedLinkSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
-    def get_share_link(self, obj):
+    @extend_schema_field(OpenApiTypes.URI)
+    def get_share_link(self, obj) -> str:
         # Return the absolute URL to the share metadata endpoint for this token
         request = self.context["request"]
         return request.build_absolute_uri(
@@ -205,13 +208,15 @@ class SharedLinkMetaSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
-    def get_download_api(self, obj):
+    @extend_schema_field(OpenApiTypes.URI)
+    def get_download_api(self, obj) -> str:
         request = self.context["request"]
         return request.build_absolute_uri(
             reverse("files_api:shares-download", args=[str(obj.token)])
         )
 
-    def get_download_page(self, obj):
+    @extend_schema_field(OpenApiTypes.URI)
+    def get_download_page(self, obj) -> str:
         request = self.context["request"]
         return request.build_absolute_uri(
             reverse("files:share_page", args=[str(obj.token)])
