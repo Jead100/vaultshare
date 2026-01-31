@@ -27,9 +27,9 @@ def _unwrap_list(data):
 
 
 @pytest.mark.django_db
-def test_upload_file(auth_client):
+def test_upload_file(authed_client):
     f = SimpleUploadedFile("test.txt", b"Hello world", content_type="text/plain")
-    resp = auth_client.post(files_list_url(), {"file": f}, format="multipart")
+    resp = authed_client.post(files_list_url(), {"file": f}, format="multipart")
 
     assert resp.status_code == status.HTTP_201_CREATED
     assert "filename" in resp.data
@@ -37,7 +37,17 @@ def test_upload_file(auth_client):
 
 
 @pytest.mark.django_db
-def test_list_shows_only_own_files(auth_client, user):
+def test_upload_rejects_non_multipart_with_custom_error(authed_client):
+    resp = authed_client.post(
+        files_list_url(), {"file": "not-a-real-upload"}, format="json"
+    )
+
+    assert resp.status_code == 415
+    assert "must use multipart/form-data" in resp.json()["detail"]
+
+
+@pytest.mark.django_db
+def test_list_shows_only_own_files(authed_client, user):
     """
     List endpoint should include only files owned by the authenticated user.
     """
@@ -45,7 +55,7 @@ def test_list_shows_only_own_files(auth_client, user):
     mine = [UploadedFileFactory(user=user) for _ in range(3)]
     other = [UploadedFileFactory() for _ in range(2)]
 
-    resp = auth_client.get(files_list_url(page_size=10))
+    resp = authed_client.get(files_list_url(page_size=10))
     assert resp.status_code == status.HTTP_200_OK
 
     # Unwrap {"data": ...} and/or {"results": ...} if payload is paginated
@@ -63,24 +73,24 @@ def test_list_shows_only_own_files(auth_client, user):
 
 
 @pytest.mark.django_db
-def test_retrieve_own_file_ok(auth_client, user):
+def test_retrieve_own_file_ok(authed_client, user):
     f = UploadedFileFactory(user=user)
-    resp = auth_client.get(files_detail_url(f.id))
+    resp = authed_client.get(files_detail_url(f.id))
     assert resp.status_code == status.HTTP_200_OK
     assert resp.data["id"] == str(f.id)
 
 
 @pytest.mark.django_db
-def test_retrieve_other_users_file_404(auth_client):
+def test_retrieve_other_users_file_404(authed_client):
     f = UploadedFileFactory()  # different owner
-    resp = auth_client.get(files_detail_url(f.id))
+    resp = authed_client.get(files_detail_url(f.id))
     assert resp.status_code == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.django_db
-def test_rename_filename(auth_client, user):
+def test_rename_filename(authed_client, user):
     f = UploadedFileFactory(user=user)
-    resp = auth_client.patch(
+    resp = authed_client.patch(
         files_detail_url(f.id), {"filename": "newname"}, format="json"
     )
     assert resp.status_code == status.HTTP_200_OK
@@ -88,20 +98,20 @@ def test_rename_filename(auth_client, user):
 
 
 @pytest.mark.django_db
-def test_rename_filename_rejects_blank(auth_client, user):
+def test_rename_filename_rejects_blank(authed_client, user):
     f = UploadedFileFactory(user=user)
-    resp = auth_client.patch(files_detail_url(f.id), {"filename": ""}, format="json")
+    resp = authed_client.patch(files_detail_url(f.id), {"filename": ""}, format="json")
     assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
 
 @pytest.mark.django_db
-def test_delete_file_removes_from_storage(auth_client, user):
+def test_delete_file_removes_from_storage(authed_client, user):
     f = UploadedFileFactory(user=user)
     name = f.file.name
     storage = f.file.storage or default_storage
 
     assert storage.exists(name)  # precondition
 
-    resp = auth_client.delete(files_detail_url(f.id))
+    resp = authed_client.delete(files_detail_url(f.id))
     assert resp.status_code in (status.HTTP_204_NO_CONTENT, status.HTTP_200_OK)
     assert not storage.exists(name)  # file should be gone from storage
