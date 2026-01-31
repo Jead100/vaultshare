@@ -63,6 +63,12 @@ class UploadedFile(models.Model):
 
     objects = UploadedFileQuerySet.as_manager()
 
+    @property
+    def is_expired(self) -> bool:
+        if self.expires_at is None:
+            return False
+        return timezone.now() >= self.expires_at
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -88,7 +94,8 @@ class SharedLink(models.Model):
 
     objects = SharedLinkManager()
 
-    def is_expired(self):
+    @property
+    def is_expired(self) -> bool:
         return timezone.now() >= self.expires_at
 
     class Meta:
