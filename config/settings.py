@@ -18,54 +18,67 @@ EXPOSE_ADMIN = config("EXPOSE_ADMIN", default=False, cast=bool)
 ALLOWED_HOSTS = config(
     "ALLOWED_HOSTS",
     default="127.0.0.1, localhost",
-    cast=lambda v: [s.strip() for s in v.split(",")],
+    cast=lambda v: [x.strip() for x in v.split(",") if x.strip()],
 )
 
-CSRF_TRUSTED_ORIGINS = [
-    o.strip()
-    for o in config(
-        "CSRF_TRUSTED_ORIGINS",
-        default="",
-    ).split(",")
-    if o.strip()
-]
+CSRF_TRUSTED_ORIGINS = config(
+    "CSRF_TRUSTED_ORIGINS",
+    default="",
+    cast=lambda v: [x.strip() for x in v.split(",") if x.strip()],
+)
 
-# Upload policy & security
+# Upload policy, quotas, and security controls
 
+# If true, bypass extension/MIME restriction
 ALLOW_ANY_FILE_TYPE = config("ALLOW_ANY_FILE_TYPE", default=False, cast=bool)
 
-# 25 MB default
+# Default max upload size (25 MB)
 MAX_UPLOAD_SIZE = config("MAX_UPLOAD_SIZE", default=25 * 1024 * 1024, cast=int)
 
-# Hard limits for incoming request bodies (especially file uploads)
+# Enforce hard limits on incoming request bodies (especially file uploads)
 DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE
 FILE_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE
 
-ALLOWED_UPLOAD_EXTENSIONS = {
-    ".pdf",
-    ".txt",
-    ".docx",
-    ".jpg",
-    ".jpeg",
-    ".png",
-    ".zip",
-    ".csv",
-    ".json",
-}
+ALLOWED_UPLOAD_EXTENSIONS = config(
+    "ALLOWED_UPLOAD_EXTENSIONS",
+    default=(
+        ".pdf,.txt,.docx,"
+        ".jpg,.jpeg,.png,.webp,.heic,"
+        ".zip,.csv,.json,"
+        ".m4a,.aac,.wav,"
+    ),
+    cast=lambda v: {x.strip().lower() for x in v.split(",") if x.strip()},
+)
 
 # Allowed content types (best-effort check)
-ALLOWED_UPLOAD_MIME_TYPES = {
-    "application/pdf",
-    "text/plain",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "image/jpeg",
-    "image/png",
-    "application/zip",
-    "application/x-zip-compressed",
-    "text/csv",
-    "application/csv",
-    "application/json",
-}
+ALLOWED_UPLOAD_MIME_TYPES = config(
+    "ALLOWED_UPLOAD_MIME_TYPES",
+    default=(
+        # documents
+        "application/pdf,"
+        "text/plain,"
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document,"
+        "text/csv,"
+        "application/csv,"
+        "application/json,"
+        # images
+        "image/jpeg,"
+        "image/png,"
+        "image/webp,"
+        "image/heic,"
+        "image/heif,"
+        # audio
+        "audio/mp4,"
+        "audio/m4a,"
+        "audio/aac,"
+        "audio/wav,"
+        "audio/x-wav,"
+        # archives
+        "application/zip,"
+        "application/x-zip-compressed,"
+    ),
+    cast=lambda v: {x.strip().lower() for x in v.split(",") if x.strip()},
+)
 
 # Per-user quota
 MAX_USER_STORAGE_BYTES = config(
