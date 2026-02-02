@@ -69,5 +69,10 @@ def validate_uploaded_file(
     # MIME check (best-effort)
     if content_type:
         ct = content_type.split(";")[0].strip().lower()
-        if policy.allowed_mime_types and ct not in policy.allowed_mime_types:
-            raise ValidationError("Unsupported file content type.")
+
+        # Some clients send "application/octet-stream" for legitimate files (e.g. HEIC).
+        # Treat it as "unknown" and rely on extension allowlist instead.
+        is_unknown = ct == "application/octet-stream"
+        if not is_unknown:
+            if policy.allowed_mime_types and ct not in policy.allowed_mime_types:
+                raise ValidationError("Unsupported file content type.")
