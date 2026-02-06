@@ -109,7 +109,7 @@ class SharedLinkViewSet(SharedLinkPresignMixin, GenericViewSet):
         """
         link = self.get_object()
 
-        if link.is_expired():
+        if link.is_expired:
             return Response({"detail": "Link expired."}, status=status.HTTP_410_GONE)
 
         serializer = self.get_serializer(link)
@@ -137,7 +137,7 @@ class SharedLinkViewSet(SharedLinkPresignMixin, GenericViewSet):
         """
         link = self.get_object()
 
-        if link.is_expired():
+        if link.is_expired:
             return Response({"detail": "Link expired."}, status=status.HTTP_410_GONE)
 
         uploaded = link.file

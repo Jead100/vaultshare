@@ -83,7 +83,7 @@ class PublicDownloadView(SharedLinkLookupMixin, View):
     def get(self, request, token):
         link = self.get_link(token)
 
-        if link.is_expired():
+        if link.is_expired:
             resp = render(request, "files/link_expired.html", status=410)
             resp["Cache-Control"] = "no-store"  # prevent caching
             return resp
@@ -111,7 +111,7 @@ class PublicDownloadRedirectView(SharedLinkLookupMixin, SharedLinkPresignMixin, 
     def get(self, request, token, *args, **kwargs):
         link = self.get_link(token)
 
-        if link.is_expired():
+        if link.is_expired:
             return render(request, "files/link_expired.html", status=410)
 
         uploaded = link.file
