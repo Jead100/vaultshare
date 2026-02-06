@@ -3,11 +3,13 @@ from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 
-from .factories import UploadedFileFactory
+from apps.files.tests.factories import UploadedFileFactory
+
 from .url_helpers import files_detail_url, files_list_url
 
-
 # Helper
+
+
 def _unwrap_list(data):
     """
     Return the list payload from an API response.
@@ -42,7 +44,7 @@ def test_upload_rejects_non_multipart_with_custom_error(authed_client):
         files_list_url(), {"file": "not-a-real-upload"}, format="json"
     )
 
-    assert resp.status_code == 415
+    assert resp.status_code == status.HTTP_415_UNSUPPORTED_MEDIA_TYPE
     assert "must use multipart/form-data" in resp.json()["detail"]
 
 

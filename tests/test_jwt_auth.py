@@ -2,16 +2,16 @@ import pytest
 from django.apps import apps
 from django.conf import settings
 from django.test.utils import override_settings
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from .factories import PASSWORD
-from .url_helpers import (
-    files_list_url,
+from tests.auth_url_helpers import (
     jwt_obtain_pair_url,
     jwt_refresh_url,
     jwt_verify_url,
 )
+from tests.factories import PASSWORD
 
 # Helpers
 
@@ -34,6 +34,13 @@ def _obtain_pair(client: APIClient, email: str, password: str) -> dict:
     return data
 
 
+def _protected_url():
+    """
+    Protected API endpoint used for JWT auth tests.
+    """
+    return reverse("files_api:files-list")
+
+
 # Tests
 
 
@@ -41,7 +48,7 @@ def _obtain_pair(client: APIClient, email: str, password: str) -> dict:
 def test_obtain_pair_and_access_protected_view(api_client, user):
     tokens = _obtain_pair(api_client, email=user.email, password=PASSWORD)
     api_client.credentials(HTTP_AUTHORIZATION=f"{_auth_type()} {tokens['access']}")
-    resp = api_client.get(files_list_url())
+    resp = api_client.get(_protected_url())
     assert resp.status_code == status.HTTP_200_OK
 
 
@@ -106,7 +113,9 @@ def test_expired_access_token_is_rejected(api_client, user):
     # Decode the valid access token
     algo = settings.SIMPLE_JWT["ALGORITHM"]
     secret = settings.SECRET_KEY
-    decoded = jwt.decode(tokens["access"], secret, algorithms=[algo])
+    decoded = jwt.decode(
+        tokens["access"], secret, algorithms=[algo], options={"verify_exp": False}
+    )
 
     # Modify exp to be in the past, accounting for leeway
     leeway = settings.SIMPLE_JWT["LEEWAY"]
@@ -117,7 +126,7 @@ def test_expired_access_token_is_rejected(api_client, user):
 
     # Attempt to access protected view with expired token
     api_client.credentials(HTTP_AUTHORIZATION=f"{_auth_type()} {expired}")
-    resp = api_client.get(files_list_url())
+    resp = api_client.get(_protected_url())
     assert resp.status_code == status.HTTP_401_UNAUTHORIZED
 
 

@@ -3,7 +3,7 @@ import tempfile
 import pytest
 from rest_framework.test import APIClient
 
-from .factories import UserFactory
+from tests.factories import UserFactory
 
 
 @pytest.fixture

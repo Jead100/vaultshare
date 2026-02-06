@@ -2,8 +2,6 @@ from urllib.parse import urlencode
 
 from django.urls import reverse
 
-# Files API
-
 
 def files_list_url(**qs):
     """
@@ -46,18 +44,3 @@ def share_download_url(token):
     /api/v1/shares/<uuid:token>/download/
     """
     return reverse("files_api:shares-download", kwargs={"token": str(token)})
-
-
-# JWT endpoints
-
-
-def jwt_obtain_pair_url():
-    return reverse("token_obtain_pair")
-
-
-def jwt_refresh_url():
-    return reverse("token_refresh")
-
-
-def jwt_verify_url():
-    return reverse("token_verify")
