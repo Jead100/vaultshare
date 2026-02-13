@@ -11,6 +11,10 @@ __pycache__/
 # Node / Tailwind
 node_modules/
 
+# VS Code & JetBrains IDEs
+.vscode/
+.idea/
+
 # Django static & media
 media/
 staticfiles/
